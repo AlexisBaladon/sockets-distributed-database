@@ -34,7 +34,8 @@ class ClientSocket:
     # Precondition: socket must be connected to a remote socket
     def receive(self):
         data = ''
-        while data.endswith("\n"):
+        while not data.endswith("\n"):
+            print(data)
             msg = self.sock.recv(SIZE)
             data += msg.decode("utf-8")
             print(msg.decode(FORMAT))

@@ -14,7 +14,7 @@ server.bind(ADDR)
 def handle_client(conn, addr):
     print(f"[NEW CONNECTION] {addr} connected.")
     data = ''
-    while data.endswith("\n"):
+    while not data.endswith("\n"):
         msg = server.recv(SIZE)
         data += msg.decode(FORMAT)
         print(msg.decode(FORMAT))
