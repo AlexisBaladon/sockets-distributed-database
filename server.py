@@ -1,10 +1,15 @@
-#from dtServer import DtServer
+from dtServer import DtServer
 
 DESCUBRIMIENTO_PORT = "2022"
 
 if __name__ == "__main__":
-    print("")
-
+    server = DtServer("12","p","puerto_des")
+    #Abrir thread DESCUBRIMIENTO()
+    #Listen...
+    while True:
+        print("")
+        #accept
+        #abrir thread de DATOS()
 
     #main
 

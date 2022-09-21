@@ -1,22 +1,36 @@
-#se anuncia en la dirección de broadcast
-def ANNOUNCE():
+from dtServer import DtServer
+
+#thread recibe
+def DISCOVER(udp_skt, server: DtServer):
+    while True:
+        print("")
+        #receive bloqueante
+        #actualizar lista de server.
     return
 
-def __recalculate_values(self):
+#thread envía
+def ANNOUNCE(udp_skt, server: DtServer, broadcast_ip: str, broadcast_port: str):
+    while True:
+        print("")
+        #avisar que existis en broadcast cada 30
+        #time.sleep 30
     return
+
+def recalculate_values(server: DtServer, ip: str, port: str):
+    #recalculas valores de server.peers
+
+    return #definir que devolver
     
-def __deliver_values(self):
+def deliver_values(server: DtServer, ip: str, value: str):
+    #se ejecuta despues de recalculate_values
     return
 
 #Parsing
 def format_command_ANNOUNCE(port: str) -> str:
-    #controla que termine en \n
-    #recibe el metodo (get set o del) y atributos y los convierte a string
-    return
+    return f"ANNOUNCE {port}"
 
 def parse_command_ANNOUNCE(command: str) -> str:
-    #controla que termine en \n
-    #recibe el metodo (get set o del) y atributos y los convierte a string
+    #recibe el metodo (announce) y atributos y los convierte a string
     return
 
 
