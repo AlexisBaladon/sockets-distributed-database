@@ -7,12 +7,16 @@ from dtServer import DtServer
 
 #Esta función determina el responsable de una key.
 #La idea es que sea usada por get, set y del.
-def __determine_designated_server(server: DtServer, key: str) -> tuple[str,str]:
-    #retorna ip de peer
-    return
+def determine_designated_server(server: DtServer, key: str) -> tuple[str,str]:
+    #AGARRA LA KEY
+    #se fija de quien es
+    return #ip, port
 
 #Rutina de atención tcp iniciada en descubrimiento
+#THREAD
 def client_attention_DATOS(server: DtServer, skt_client):
+    #HACE LO QUE TIENE MIGUE PERO
+    #USA LAS FUNCIONES DE ABAJO
     return
 
 #Parsing
@@ -51,3 +55,4 @@ if __name__ == "__main__":
     print(parse_command_GET(command))
     command = "DEL 124 \n"
     print(parse_command_GET(command))
+    command = "ANNOUNCE 124 \n"
