@@ -38,7 +38,6 @@ class ClientSocket:
             print(data)
             msg = self.sock.recv(SIZE)
             data += msg.decode("utf-8")
-            print(msg.decode(FORMAT))
         return data
 
     # Close the connection to the remote socket
