@@ -26,7 +26,7 @@ def determine_designated_server(server: DtServer, key: str) -> tuple[str,str]:
 
 #Rutina de atención tcp iniciada en descubrimiento
 #THREAD
-#def client_attention_DATOS(server: DtServer, skt_client):
+def client_attention_DATOS(server: DtServer, skt_client):
     database_access = {
         "GET": lambda x, y: server.database.get(x),
         "SET": server.database.set,
@@ -36,7 +36,7 @@ def determine_designated_server(server: DtServer, key: str) -> tuple[str,str]:
     while True:
         response = ERROR_MSG
         query = skt_client.receive() #bloqueante. Aun no se como llega el receive
-        method, key, value = parse_command(method)
+        method, key, value = parse_command(query)
         if method is not None:
             owner_socket = determine_designated_server(key)
             if owner_socket == server.socket:
@@ -44,8 +44,10 @@ def determine_designated_server(server: DtServer, key: str) -> tuple[str,str]:
                 response = format_response(method, response)
             else:
                 formated_msg = format_method(method, key, value)
-                peer_skt.send(formated_msg)
+                #adquirir
+                peer_skt.send(formated_msg) #Ciclos?
                 response = peer_skt.receive()
+                #soltar
 
         skt_client.send(response) #falta
                 #variable de 'enuso' y lock. Lock debe ser realizado por server (desconexiones!!)
@@ -61,11 +63,12 @@ def determine_designated_server(server: DtServer, key: str) -> tuple[str,str]:
 def format_response(method, response):
     if response == None:
         return "NO\n"
-    if method == "SET":
+    if method == "GET":
         return f'OK {response}\n'
     return 'OK\n'
 
 #Parsing
+
 def format_method(method:str, key: str, value: str = "") -> str:
     if method == "SET":
         return f'{method} {key} {value}\n'
@@ -93,6 +96,7 @@ if __name__ == "__main__":
     right_get = "GET 123a111\n"
     right_set = "SET 123a1 1abc\n"
     right_del = "DEL 123b111a\n"
+    wrong_msg = "GET 123/abc\n"
 
     #import zlib
     #print(zlib.crc32(b"holaquetal"))
@@ -102,6 +106,8 @@ if __name__ == "__main__":
     parsed1, parsed2, parsed3 = parse_command(right_set)
     print(parsed1, parsed2, parsed3)
     parsed1, parsed2, parsed3 = parse_command(right_del)
+    print(parsed1, parsed2, parsed3)
+    parsed1, parsed2, parsed3 = parse_command(wrong_msg)
     print(parsed1, parsed2, parsed3)
     #met = get_method("GET 123\n")
     #print(met)
