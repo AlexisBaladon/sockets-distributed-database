@@ -26,6 +26,11 @@ def determine_designated_server(server: DtServer, key: str) -> tuple[str,str]:
 
 #Rutina de atención tcp iniciada en descubrimiento
 #THREAD
+#FROM ME TO MIGUE:
+#while True:
+    #cliente.accept()
+    #abrir_thread(client_attention_DATOS, server, cliente)
+
 def client_attention_DATOS(server: DtServer, skt_client):
     database_access = {
         "GET": lambda x, y: server.database.get(x),
