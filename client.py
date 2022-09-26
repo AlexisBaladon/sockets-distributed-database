@@ -1,4 +1,10 @@
-## Modulo de Utilidades (utilis.py) ##
+## Redes de Computadoras 2022 - Facultad de Ingenieria - UdelaR
+## GRUPO 16:
+##   - Alexis Badalon
+##   - Jorge Machado
+##   - Mathias Martinez
+
+## Modulo Principal de Cliente (Client.py) ##
 
 # Definicion de Imports #
 import os # Utilizado para limpiar la consola
