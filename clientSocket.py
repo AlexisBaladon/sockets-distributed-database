@@ -32,7 +32,7 @@ class ClientSocket:
             raise RuntimeError("Socket connection broken")
             
     # Precondition: socket must be connected to a remote socket
-    def receive(self):
+    def receive(self) -> str:
         data = ''
         while not data.endswith("\n"):
             print(data)
