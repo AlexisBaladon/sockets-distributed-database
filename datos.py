@@ -8,22 +8,6 @@ ERROR_MSG = "NO\n"
 # Estas funciones se ayudan de datos.py. para
 # comunicarse con otros servers.
 
-#Esta función determina el responsable de una key.
-#La idea es que sea usada por get, set y del.
-def determine_designated_server(server: DtServer, key: str) -> tuple[str,str]:
-    key_crc = zlib.crc32(key)
-    min_distance = abs(server.firma - key_crc)
-    min_socket = server.socket #FALTA
-    
-    for peer_key in server.peers:
-        peer = server.peers[peer_key]
-        peer_distance = abs(peer.crc - key_crc)
-        if peer_distance < min_distance:
-            min_distance = peer_distance
-            min_socket = peer.socket #FALTA
-
-    return min_socket
-
 #Rutina de atención tcp iniciada en descubrimiento
 #THREAD
 #FROM ME TO MIGUE:
@@ -43,25 +27,19 @@ def client_attention_DATOS(server: DtServer, skt_client):
         query = skt_client.receive() #bloqueante. Aun no se como llega el receive
         method, key, value = parse_command(query)
         if method is not None:
-            owner_socket = determine_designated_server(key)
+            key_crc = zlib.crc32(key)
+            owner_socket = server.determine_designated_server(server, key_crc)
             if owner_socket == server.socket:
                 response = database_access[method](key, value) #ojo con return
                 response = format_response(method, response)
             else:
                 formated_msg = format_method(method, key, value)
-                #adquirir
+                peer_skt.acquire() #adquirir
                 peer_skt.send(formated_msg) #Ciclos?
                 response = peer_skt.receive()
-                #soltar
-
+                peer_skt.release() #soltar
+                
         skt_client.send(response) #falta
-                #variable de 'enuso' y lock. Lock debe ser realizado por server (desconexiones!!)
-            #for peer_key in server.peers:
-            #    peer_ip = server.peers[key].ip
-            #    peer_port = server.peers[key].port
-            #    if peer_ip == owner_ip and peer_port == owner_port:
-            #        peer_socket = server.peers[key].socket #ups no me di cuenta de esto
-
     skt_client.close() #OJO AL PIOJO
     return
 
