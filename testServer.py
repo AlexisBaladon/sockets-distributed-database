@@ -19,6 +19,7 @@ def handle_client(conn, addr):
         data += msg.decode(FORMAT)
     print(f"[{addr}] {data}")
     conn.send("Msg received\n".encode(FORMAT))
+    conn.close()
 
 def main():
     server.listen()
