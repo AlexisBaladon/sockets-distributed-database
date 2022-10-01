@@ -17,9 +17,9 @@ class DtServer:
     def __init__(self, server_IP: str, server_port: str, descubrimiento_port: str):
         #Controlar formato antes
 
-        self.server_IP = server_IP
-        self.server_port = server_port
-        self.descubrimiento_port = descubrimiento_port
+        self.server_IP = server_IP # Direccion SERVER
+        self.server_port = server_port # TCP DATOS
+        self.descubrimiento_port = descubrimiento_port # UDP DESCUBRIMIENTO
         
         self.firma = '' #aplicar zlib.crc32(s)
         self.database = Database()
@@ -28,7 +28,8 @@ class DtServer:
 
     def determine_designated_server(self, key_crc: int):
         min_distance = abs(self.firma - key_crc)
-        min_socket = self.socket #FALTA
+        min_socket = None #esto no va, no se necesitan sockets extra para DATOS
+        #Basta tener ip y puerto del servidor almacenado y tirar un ClientSocket.py
         peers = self.peers
 
         peers.acquire()
@@ -68,6 +69,7 @@ class DtServer:
                 print("[DATABASE] Valor nuevo almacenado en elemento %s" % key)
                 response = formatResponse(method, key)
                 # Si no me pertenece
+
                 # Realizar DATOS a otro server siendo client
             case 'DEL':
                 # Si me pertenece la clave

@@ -4,7 +4,7 @@ import threading
 from datos import parseCommand
 from dtServer import DtServer
 
-PORT = 2022
+PORT = 32000
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 SIZE = 1024
