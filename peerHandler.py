@@ -8,7 +8,7 @@ class Peer:
         return
 
 class PeerHandler:
-    def __init__(self, peers: dict(str, Peer) = {}):
+    def __init__(self, peers: dict = {}):
         self.lock = Lock()
         self.peers: dict = peers
 

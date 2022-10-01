@@ -7,7 +7,7 @@
 ## Modulo de Database (Database.py) ##
 
 # Definicion de Imports #
-#from peerHandler import PeerHandler
+from peerHandler import PeerHandler
 from src.exceptions.MethodError import MethodError
 from src.server.Database import Database
 from src.util.Utilis import parseCommand, formatResponse
