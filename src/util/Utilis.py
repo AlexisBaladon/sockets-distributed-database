@@ -8,6 +8,7 @@
 
 # Definicion de Imports #
 import ipaddress # Utilizado para checkear direcciones IPv4
+import re # Regex
 from src.exceptions.KeyError import KeyError
 from src.exceptions.MethodError import MethodError
 
@@ -58,3 +59,26 @@ def genMsgDatos(method: str, key: str, value: str) -> str:
             raise KeyError("La key %s ingresada no es valida" % key)
     else:
         raise MethodError("Metodo %s no soportado" % method)
+
+#Devuelve el metodo o None en caso de tener un formato erróneo
+def parseCommand(command: str) -> tuple[str,str,str]:
+    regex_methods = {
+        "GET": r'^GET (\d|\w+)\n$',
+        "SET": r'^SET (\d|\w+) (\d|\w+)\n$',
+        "DEL": r'^DEL (\d|\w+)\n$'
+    }
+    for method in regex_methods:
+        regex = re.compile(regex_methods[method])
+        method_match = regex.match(command)
+        if method_match is not None:
+            key = method_match.group(1)
+            value = method_match.group(2) if method == "SET" else None
+            return method, key, value
+    return None, None, None
+
+def formatResponse(method: str, response: str) -> str:
+    if response == None:
+        return "NO\n"
+    if method == "GET":
+        return f'OK {response}\n'
+    return 'OK\n'

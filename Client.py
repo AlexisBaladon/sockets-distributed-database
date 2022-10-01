@@ -131,17 +131,18 @@ def inputMethodAuto(method: str) -> str:
         else:
             print('[ATENCION] Por favor, ingrese una clave valida\n')
     value = ''
-    if method.upper() in METHODS:
+    if method.upper() == 'SET':
         while True:
             value = input('Ingrese valor: ')
             if (not value == ''):
                 break
             else:
                 print('[ATENCION] Por favor, ingrese un valor valido\n')
+    msg = ''
     try:
         msg = genMsgDatos(method, key, value)
     except Exception as e:
-        print('[ERR] ' + e)
+        print('[ERR] ' + str(e))
     return msg
 
 def manualInput() -> str:
@@ -165,11 +166,11 @@ def connDatos(addr: str, port: str, msg: str):
         print('*Respuesta obtenida: %s' % data)
         input('Operacion completada, presione ENTER para continuar!')
     except TimeoutError as te:
-        print('[TIMEOUT_ERR] ' + te)
+        print('[TIMEOUT_ERR] ' + str(te))
     except InterruptedError as ie:
-        print('[INTERRUPTED_ERR] ' + ie)
+        print('[INTERRUPTED_ERR] ' + str(ie))
     except Exception as e:
-        print('[ERR] ' + e)
+        print('[ERR] ' + str(e))
 
 def main():
     cliClear()

@@ -42,7 +42,8 @@ def client_attention_DATOS(server: DtServer, skt_client):
         skt_client.send(response) #falta
     skt_client.close() #OJO AL PIOJO
     return
-
+    
+# ME LLEVE ESTA FUNCION DE ACA A UTILIS.PY!!!
 def format_response(method, response):
     if response == None:
         return "NO\n"
@@ -57,8 +58,9 @@ def format_method(method:str, key: str, value: str = "") -> str:
         return f'{method} {key} {value}\n'
     return f'{method} {key}\n'
 
+# ME LLEVE ESTA FUNCION DE ACA A UTILIS.PY!!!
 #Devuelve el metodo o None en caso de tener un formato erróneo
-def parse_command(command: str) -> tuple[str,str,str]:
+def parseCommand(command: str) -> tuple[str,str,str]:
     regex_methods = {
         "GET": r'^GET (\d|\w+)\n$',
         "SET": r'^SET (\d|\w+) (\d|\w+)\n$',
