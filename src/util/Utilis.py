@@ -8,6 +8,7 @@
 
 # Definicion de Imports #
 import ipaddress # Utilizado para checkear direcciones IPv4
+import re # Regex
 from src.exceptions.KeyError import KeyError
 from src.exceptions.MethodError import MethodError
 

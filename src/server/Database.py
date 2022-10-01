@@ -1,3 +1,12 @@
+## Redes de Computadoras 2022 - Facultad de Ingenieria - UdelaR
+## GRUPO 16:
+##   - Alexis Badalon
+##   - Jorge Machado
+##   - Mathias Martinez
+
+## Modulo de Database (Database.py) ##
+
+# Definicion de Imports #
 from threading import Lock
 
 class Database:

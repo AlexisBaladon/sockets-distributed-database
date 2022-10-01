@@ -1,20 +1,29 @@
-from database import Database
-from peerHandler import PeerHandler
-from src.util.Utilis import parseCommand, formatResponse
+## Redes de Computadoras 2022 - Facultad de Ingenieria - UdelaR
+## GRUPO 16:
+##   - Alexis Badalon
+##   - Jorge Machado
+##   - Mathias Martinez
+
+## Modulo de Database (Database.py) ##
+
+# Definicion de Imports #
+#from peerHandler import PeerHandler
 from src.exceptions.MethodError import MethodError
+from src.server.Database import Database
+from src.util.Utilis import parseCommand, formatResponse
 import zlib
 
 class DtServer:
     def __init__(self, server_IP: str, server_port: str, descubrimiento_port: str):
         #Controlar formato antes
 
-        self.server_IP: str = server_IP
-        self.server_port: str = server_port
+        self.server_IP = server_IP
+        self.server_port = server_port
         self.descubrimiento_port = descubrimiento_port
         
         self.firma = '' #aplicar zlib.crc32(s)
         self.database = Database()
-        self.peers = PeerHandler() #mapea IP Y PUERTO a peer (hay que ver si anda por pasaje por referencia odioso)
+        #self.peers = PeerHandler() #mapea IP Y PUERTO a peer (hay que ver si anda por pasaje por referencia odioso)
         return
 
     def determine_designated_server(self, key_crc: int):
@@ -57,15 +66,15 @@ class DtServer:
                 # Si me pertenece la clave
                 self.database.set(key, value)
                 print("[DATABASE] Valor nuevo almacenado en elemento %s" % key)
-                response = formatResponse(method, None)
+                response = formatResponse(method, key)
                 # Si no me pertenece
                 # Realizar DATOS a otro server siendo client
             case 'DEL':
                 # Si me pertenece la clave
                 try:
-                    self.database.get(key)
+                    self.database.delete(key)
                     print("[DATABASE] Elemento %s eliminado" % key)
-                    response = formatResponse(method, None)
+                    response = formatResponse(method, key)
                 except KeyError:
                     print("[DATABASE] Elemento %s no encontrado" % key)
                     response = formatResponse(None, None)

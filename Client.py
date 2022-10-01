@@ -131,7 +131,7 @@ def inputMethodAuto(method: str) -> str:
         else:
             print('[ATENCION] Por favor, ingrese una clave valida\n')
     value = ''
-    if method.upper() in METHODS:
+    if method.upper() == 'SET':
         while True:
             value = input('Ingrese valor: ')
             if (not value == ''):
