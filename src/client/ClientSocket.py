@@ -15,7 +15,7 @@ FORMAT = 'utf-8' # Formato del mensaje
 
 class ClientSocket:
     # Inicializar el socket del cliente
-    def __init__(self, sock=None):
+    def __init__(self, sock=None): #Los singleton no son thread safe - Alexis
         if sock is None:
             self.sock = socket.socket(
                             socket.AF_INET, socket.SOCK_STREAM)

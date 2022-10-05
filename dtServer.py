@@ -23,7 +23,7 @@ class DtServer:
         
         self.firma = '' #aplicar zlib.crc32(s)
         self.database = Database()
-        #self.peers = PeerHandler() #mapea IP Y PUERTO a peer (hay que ver si anda por pasaje por referencia odioso)
+        self.peers = PeerHandler() #mapea IP Y PUERTO a peer (hay que ver si anda por pasaje por referencia odioso)
         return
 
     def determine_designated_server(self, key_crc: int):

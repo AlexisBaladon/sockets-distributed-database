@@ -53,11 +53,11 @@ def cliClear():
 # Imprime el texto de ayuda
 def help():
     cliClear()
-    while True:
+    while True: 
         print(HELP[0])
         try:
             opt = int(input('Seleccione una opcion: '))
-            match opt:
+            match opt: #Esto no necesita un switch jajajajaajjajaja basta con poner HELP[opt]
                 case 1:
                     cliClear()
                     print(HELP[1])
@@ -177,7 +177,7 @@ def main():
     while True:
         print(MENU_OPTS)
         try:
-            opt = int(input('Seleccione una opcion: '))
+            opt = int(input('Seleccione una opcion: ')) #Esto tampoco requiere un switch, basta con hacer inputMethod(METODO[opt])
             match opt:
                 case 1:
                     (addr, port) = inputAddr()
