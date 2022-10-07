@@ -10,7 +10,7 @@
 from peerHandler import PeerHandler
 from src.exceptions.MethodError import MethodError
 from src.server.Database import Database
-from src.util.Utilis import parseCommand, formatResponse
+from src.util.utilis import parseCommand, formatResponse
 import zlib
 
 class DtServer:

@@ -2,7 +2,7 @@ from threading import Thread
 from dtServer import DtServer
 from datos import client_attention_DATOS
 from descubrimiento import ANNOUNCE, DISCOVER
-from src.client.ClientSocket import ClientSocket
+from src.client.clientSocket import ClientSocket
 
 DESCUBRIMIENTO_PORT = "2022"
 
