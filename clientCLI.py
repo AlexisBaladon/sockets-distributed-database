@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 ## Redes de Computadoras 2022 - Facultad de Ingenieria - UdelaR
 ## GRUPO 16:
 ##   - Alexis Badalon
