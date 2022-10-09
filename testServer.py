@@ -1,7 +1,7 @@
 import socket
 import traceback
 import threading
-from datos import parseCommand
+from src. import parseCommand
 from dtServer import DtServer
 
 PORT = 32000

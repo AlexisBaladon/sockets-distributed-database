@@ -6,12 +6,12 @@
 ##   - Jorge Machado
 ##   - Mathias Martinez
 
-## Modulo Principal de Cliente (Client.py) ##
+## Modulo Principal de Cliente (client.py) ##
 
 # Definicion de Imports #
 import sys, getopt
-from src.client.clientSocket import ClientSocket
-from src.util.utilis import checkIp, checkPort, genMsgDatos
+from src.client.clientSocket import getLocalhost, sendMsgDatos
+from src.util.utilis import checkIp, checkPort, genMsgDatos, parseCommand
 
 # Definicion de Constantes #
 
@@ -24,18 +24,6 @@ HELP = ["client.py [options] | <ServerIP> <ServerPort> <Op> <Key> [<Value>]\n",
     "Options:\n  -h:    Imprime el texto de ayuda")]
 
 # Definicion de Funciones #
-
-# Envia el mensaje 'msg' al socket remoto en addr:port siguiendo el 
-#   Protocolo DATOS
-# Finaliza la conexion y retorna la respuesta por parte del servidor.
-def sendMsgDatos(addr: str, port: int, msg: str) -> str:
-    data = ''
-    client = ClientSocket() # Obtener el socket
-    client.connect(addr, port) # Establecer conexion
-    client.send(msg) # Enviar mensaje (DATOS)
-    data = client.receive() # Recibir respuesta
-    client.close() # Finalizar conexion
-    return data
 
 # Metodo de comunicacion con servidor mediante el Protocolo DATOS
 # Precondiciones:
@@ -77,8 +65,15 @@ def main(argv):
         return None
     elif (len(args) == 4):
         args.append('')
+    if (args[0] == 'localhost'):
+            args[0] = getLocalhost()
     try:
-        connDatos(checkIp(args[0]), checkPort(args[1]), genMsgDatos(args[2], args[3], args[4]))
+        mensaje = genMsgDatos(args[2], args[3], args[4])
+        if (parseCommand(mensaje)[0] == None):
+            print("[ATENCION] Formato de mensaje invalido")
+            print(HELP[0])
+            return None
+        connDatos(checkIp(args[0]), checkPort(args[1]), mensaje)
     except Exception as e:
         print("[ATENCION] ", str(e))
         print(HELP[0])

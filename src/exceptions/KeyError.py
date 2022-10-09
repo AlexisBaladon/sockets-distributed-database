@@ -4,7 +4,7 @@
 ##   - Jorge Machado
 ##   - Mathias Martinez
 
-## Modulo de KeyError (KeyError.py) ##
+## Modulo de KeyError (keyError.py) ##
 
 # Definicion de la clase KeyError
 class KeyError(Exception):

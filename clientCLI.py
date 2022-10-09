@@ -8,6 +8,7 @@
 
 # Definicion de Imports #
 import os # Utilizado para limpiar la consola
+import client
 from src.client.clientSocket import sendMsgDatos
 from src.client.clientSocket import getLocalhost
 from src.util.utilis import checkIp 

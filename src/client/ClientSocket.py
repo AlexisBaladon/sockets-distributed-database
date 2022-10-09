@@ -13,14 +13,17 @@ import socket
 SIZE = 1024 # Tamanio del buffer del mensaje
 FORMAT = 'utf-8' # Formato del mensaje
 
+dict server.listaSockets
+
+for compas in Peers:
+    socketcompa = clientsocket()
+    socketcompa.connect(compaip, puertocompa)
+    listaSockets.append((compas, socketcompa))
+
 class ClientSocket:
     # Inicializar el socket del cliente
-    def __init__(self, sock=None): #Los singleton no son thread safe - Alexis
-        if sock is None:
-            self.sock = socket.socket(
-                            socket.AF_INET, socket.SOCK_STREAM)
-        else:
-            self.sock = sock
+    def __init__(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Conecta con un socket remoto en host:port
     # Nota: Lanza las excepciones TimeoutError y InterruptedError
@@ -57,14 +60,9 @@ def getLocalhost():
 # Finaliza la conexion y retorna la respuesta por parte del servidor.
 def sendMsgDatos(addr: str, port: int, msg: str) -> str:
     data = ''
-    print('[CONN] Estableciendo conexion con %s:%d' % (addr, port))
     client = ClientSocket() # Obtener el socket
     client.connect(addr, port) # Establecer conexion
-    print('[CONN] Conexion establecida')
     client.send(msg) # Enviar mensaje (DATOS)
-    print('[CONN] Mensaje enviado')
     data = client.receive() # Recibir respuesta
-    print('[CONN] Respuesta obtenida')
     client.close() # Finalizar conexion
-    print('[CONN] Conexion finalizada con %s:%d' % (addr, port))
     return data

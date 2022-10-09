@@ -4,7 +4,7 @@
 ##   - Jorge Machado
 ##   - Mathias Martinez
 
-## Modulo de Database (Database.py) ##
+## Modulo de Database (database.py) ##
 
 # Definicion de Imports #
 from threading import Lock

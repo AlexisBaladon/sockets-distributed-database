@@ -4,7 +4,7 @@
 ##   - Jorge Machado
 ##   - Mathias Martinez
 
-## Modulo de MethodError (MethodError.py) ##
+## Modulo de MethodError (methodError.py) ##
 
 # Definicion de la clase MethodError
 class MethodError(Exception):

@@ -9,8 +9,8 @@
 # Definicion de Imports #
 import ipaddress # Utilizado para checkear direcciones IPv4
 import re # Regex
-from src.exceptions.KeyError import KeyError
-from src.exceptions.MethodError import MethodError
+from src.exceptions.keyError import KeyError
+from src.exceptions.methodError import MethodError
 
 # Definicion de Constantes #
 METHODS = ['GET', 'SET', 'DEL']
