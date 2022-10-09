@@ -7,3 +7,5 @@ Parte 2:
 El endswith \n no itera infinitamente si no tiene ?
 crc puede repetirse -> no puede usarse como clave
 get_all database
+
+tenerte a vos mismo como peer 👿

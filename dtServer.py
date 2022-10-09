@@ -14,32 +14,30 @@ from src.util.utilis import parseCommand, formatResponse
 import zlib
 
 class DtServer:
-    def __init__(self, server_IP: str, server_port: str, descubrimiento_port: str):
-        #Controlar formato antes
-
-        self.server_IP = server_IP # Direccion SERVER
-        self.server_port = server_port # TCP DATOS
+    def __init__(self, ip: str, datos_port: str, announce_port: str, descubrimiento_port: str):
+        self.ip = ip # Direccion SERVER
+        self.datos_port = datos_port # TCP DATOS
+        self.announce_port = announce_port # UDP ANNOUNCE
         self.descubrimiento_port = descubrimiento_port # UDP DESCUBRIMIENTO
         
-        self.firma = '' #aplicar zlib.crc32(s)
-        self.database = Database()
-        self.peers = PeerHandler() #mapea IP Y PUERTO a peer (hay que ver si anda por pasaje por referencia odioso)
+        self.firma = zlib.crc32(f'{ip}:{datos_port}'.encode())
+        self.database = Database() # Inicializacion de la base de datos
+        self.peers = PeerHandler() # Mapea (IP, PUERTO_DATOS) a peer
+        ()
         return
 
     def determine_designated_server(self, key_crc: int):
         min_distance = abs(self.firma - key_crc)
         min_socket = None #esto no va, no se necesitan sockets extra para DATOS
         #Basta tener ip y puerto del servidor almacenado y tirar un ClientSocket.py
-        peers = self.peers
+        peers = self.peers.get_peers_keys()
 
-        peers.acquire()
         for peer_key in peers:
-            peer = peers[peer_key]
+            peer = peers.get_peer(peer_key)
             peer_distance = abs(peer.crc - key_crc)
             if peer_distance < min_distance:
                 min_distance = peer_distance
                 min_socket = peer.socket #FALTA
-        peers.release()
         return min_socket
 
     # POR AHORA SOLO PROCESA EN EL MISMO

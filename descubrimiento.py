@@ -1,5 +1,5 @@
 from xml.dom import ValidationErr
-from src.server.Database import Database
+from src.server.database import Database
 
 
 import re
@@ -8,12 +8,14 @@ import time
 import zlib
 from dtServer import DtServer
 from peerHandler import Peer
-from src.server.AnnounceSocket import sendMsgBroadcast
-from src.server.DiscoverSocket import receiveFromBroadcast
+from src.server.announceSocket import sendMsgBroadcast
+from src.server.discoverSocket import receiveFromBroadcast
+from src.client.clientSocket import ClientSocket
 #from src.util.Utilis import checkIp 
 #from src.util.Utilis import genMsgDatos 
 
 # Definicion de Constantes #
+SLEEP_TIME = 5 # Tiempo de espera para enviar mensaje de broadcast ANNOUNCE
 SIZE = 1024 # Tamanio del buffer del mensaje
 FORMAT = 'utf-8' # Formato del mensaje
 
@@ -22,37 +24,36 @@ def DISCOVER(server: DtServer):
     while True:
         # Escucha bloqueante por mensaje broadcast de algún peer.
         (msg, ip) = receiveFromBroadcast(server.descubrimiento_port)
-        # Parsea el mensaje 'ANNOUNCE <port>', devolviendo la lista ['ANNOUNCE', <port>], o None, None.
-        (method, port) = parse_command_ANNOUNCE(msg)
-        # Si ya el primer elemento en esta lista de parseo es "None", es porque el mensaje recibido tiene el formato correcto.
-        if method is not None:
-            puerto_peer_datos = port    # Del parseo me interesa unicamente el nro. de puerto, el cual lugo utilizo para establecer comunicacion con el server anunciado para el protocolo datos.
-        #CASO EN EL QUE NO:TODO    
+        if ip != server.ip:
+            # Parsea el mensaje 'ANNOUNCE <port>', devolviendo la lista ['ANNOUNCE', <port>], o None, None.
+            (method, port) = parse_command_ANNOUNCE(msg)
+            # Si ya el primer elemento en esta lista de parseo es "None", es porque el mensaje recibido tiene el formato correcto.
+            if method is not None:
+                puerto_peer_datos = port    # Del parseo me interesa unicamente el nro. de puerto, el cual lugo utilizo para establecer comunicacion con el server anunciado para el protocolo datos.
+            
+                # Abre una conexión TCP al puerto dado para soportar DATOS.
+                socket_datos = ClientSocket()
+                socket_datos.connect(ip, int(puerto_peer_datos))
 
+                #actualizar lista de server.
+                server_nuevo = ip + ':' + puerto_peer_datos
+                enc_server_nuevo = server_nuevo.encode()
+                crc_server_nuevo = hex(zlib.crc32(enc_server_nuevo))
+                nuevo_peer = Peer(socket_datos, str(crc_server_nuevo))
+                server.peers.set_peer(ip, puerto_peer_datos, nuevo_peer)
 
-        #actualizar lista de server.
-        server_nuevo = ip + ':' + puerto_peer_datos
-        enc_server_nuevo = server_nuevo.encode()
-        crc_server_nuevo = hex(zlib.crc32(enc_server_nuevo))
-        nuevo_peer = Peer(ip, puerto_peer_datos, str(crc_server_nuevo))
-        server.peers.set_peer(nuevo_peer)
-
-        # Abre una conexión TCP al puerto dado para soportar DATOS.
-        socket_datos = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #TODO: Client socket
-        socket_datos.connect(ip, puerto_peer_datos)
-
-        # Estuve pensando, y es que a lo mejor nos conviene que la clase Server (o DtServer no se) tenga un atributo como una lista para almacenar estos valores, y reutilizarlos en otro lado.
-        recalculados = recalculate_values(server, crc_server_nuevo)
-        deliver_values(recalculados, socket_datos)
+                # Estuve pensando, y es que a lo mejor nos conviene que la clase Server (o DtServer no se) tenga un atributo como una lista para almacenar estos valores, y reutilizarlos en otro lado.
+                recalculados = recalculate_values(server, crc_server_nuevo)
+                deliver_values(recalculados, socket_datos)
     return
 
 # Thread envia
 def ANNOUNCE(server: DtServer):
-    msg = format_command_ANNOUNCE(server.server_port)
+    msg = format_command_ANNOUNCE(server.datos_port)
     while True:
         #aviso que existo en broadcast cada 30 segundos
         sendMsgBroadcast(msg, server.descubrimiento_port)
-        time.sleep(30)
+        time.sleep(SLEEP_TIME)
     return
 
 def recalculate_values(server: DtServer, crc_server_nuevo):
@@ -77,15 +78,14 @@ def recalculate_values(server: DtServer, crc_server_nuevo):
 #def deliver_values(server: DtServer, ip: str, value: str):
 # Esta nueva definición asume que 'socket_abierto_datos' es parte de una conexion TCP ya hecha y abierta.
 def deliver_values(diccionario_recalculados, socket_abierto_datos):
-    #Adquirir peer_socket = ClientSocket
+    peer_socket = ClientSocket()
     #peer_socket.send(msg)
     #Soltar
 
-
-
     #se ejecuta despues de recalculate_values
     for i in diccionario_recalculados:
-        socket_abierto_datos.send(diccionario_recalculados[i].encode(FORMAT))
+        peer_socket.send(msg)
+        #socket_abierto_datos.send(diccionario_recalculados[i].encode(FORMAT))
     return
 
 #Parsing

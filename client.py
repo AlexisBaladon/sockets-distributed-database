@@ -63,7 +63,7 @@ def main(argv):
         print("[ATENCION] Argumentos faltantes")
         print(HELP[0])
         return None
-    elif (len(args) == 4):
+    elif (len(args) == 4): # Seteo value como el string vacio, si no existe
         args.append('')
     if (args[0] == 'localhost'):
             args[0] = getLocalhost()
