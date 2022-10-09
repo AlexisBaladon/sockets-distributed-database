@@ -31,3 +31,19 @@ class Database:
         with self.lock:
             del self.database[key]
         return
+    
+    ##################################
+    # Nueva (By Mathias)
+    ##################################
+    def get_all(self):
+        with self.lock:
+            values = self.database
+        return values
+    
+    ##################################
+    # De uso exclusivo para pruebas
+    ##################################
+    def show(self):
+        for i in self.database:
+            print(i + '   ' + self.get(i))
+        return
