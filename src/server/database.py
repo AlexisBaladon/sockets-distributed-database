@@ -37,7 +37,7 @@ class Database:
     ##################################
     def get_all(self):
         with self.lock:
-            values = self.database
+            values = self.database.copy() #No queremos referenciasss. No entiendo tampoco por que es necesario esto (hablar)
         return values
     
     ##################################
