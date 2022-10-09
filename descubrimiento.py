@@ -23,11 +23,13 @@ def DISCOVER(server: DtServer):
         # Escucha bloqueante por mensaje broadcast de algún peer.
         (msg, ip) = receiveFromBroadcast(server.descubrimiento_port)
         # Parsea el mensaje 'ANNOUNCE <port>', devolviendo la lista ['ANNOUNCE', <port>], o None, None.
-        parse_msg = parse_command_ANNOUNCE(msg)
+        (method, port) = parse_command_ANNOUNCE(msg)
         # Si ya el primer elemento en esta lista de parseo es "None", es porque el mensaje recibido tiene el formato correcto.
-        if parse_msg[0] is not None:
-            puerto_peer_datos = parse_msg[1]    # Del parseo me interesa unicamente el nro. de puerto, el cual lugo utilizo para establecer comunicacion con el server anunciado para el protocolo datos.
-        
+        if method is not None:
+            puerto_peer_datos = port    # Del parseo me interesa unicamente el nro. de puerto, el cual lugo utilizo para establecer comunicacion con el server anunciado para el protocolo datos.
+        #CASO EN EL QUE NO:TODO    
+
+
         #actualizar lista de server.
         server_nuevo = ip + ':' + puerto_peer_datos
         enc_server_nuevo = server_nuevo.encode()
@@ -36,7 +38,7 @@ def DISCOVER(server: DtServer):
         server.peers.set_peer(nuevo_peer)
 
         # Abre una conexión TCP al puerto dado para soportar DATOS.
-        socket_datos = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket_datos = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #TODO: Client socket
         socket_datos.connect(ip, puerto_peer_datos)
 
         # Estuve pensando, y es que a lo mejor nos conviene que la clase Server (o DtServer no se) tenga un atributo como una lista para almacenar estos valores, y reutilizarlos en otro lado.
@@ -53,7 +55,7 @@ def ANNOUNCE(server: DtServer):
         time.sleep(30)
     return
 
-def recalculate_values(server: DtServer, crc_server_nuevo: str):
+def recalculate_values(server: DtServer, crc_server_nuevo):
     # Declarar una lista de retorno, inicialmente vacia
     valores_a_transferir = dict()
     valores_servidor_actual = server.database.get_all()
@@ -75,6 +77,12 @@ def recalculate_values(server: DtServer, crc_server_nuevo: str):
 #def deliver_values(server: DtServer, ip: str, value: str):
 # Esta nueva definición asume que 'socket_abierto_datos' es parte de una conexion TCP ya hecha y abierta.
 def deliver_values(diccionario_recalculados, socket_abierto_datos):
+    #Adquirir peer_socket = ClientSocket
+    #peer_socket.send(msg)
+    #Soltar
+
+
+
     #se ejecuta despues de recalculate_values
     for i in diccionario_recalculados:
         socket_abierto_datos.send(diccionario_recalculados[i].encode(FORMAT))
