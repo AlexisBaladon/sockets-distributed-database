@@ -4,7 +4,7 @@
 ##   - Jorge Machado
 ##   - Mathias Martinez
 
-## Modulo de Utilidades (Utilis.py) ##
+## Modulo de Utilidades (utilis.py) ##
 
 # Definicion de Imports #
 import ipaddress # Utilizado para checkear direcciones IPv4
@@ -15,6 +15,8 @@ from src.exceptions.methodError import MethodError
 # Definicion de Constantes #
 METHODS = ['GET', 'SET', 'DEL']
 CHARS_TO_FILTER = [" ", "\n", "\r", "\t"]
+
+# Definicion de Funciones #
 
 # Checkea si 'addr' es una direccion IPv4 valida
 def checkIp(addr: str) -> str:

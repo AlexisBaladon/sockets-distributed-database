@@ -31,7 +31,7 @@ HELP = ["client.py [options] | <ServerIP> <ServerPort> <Op> <Key> [<Value>]\n",
 # - Msg es un mensaje valido para el Protocolo DATOS
 def connDatos(addr: str, port: str, msg: str):
     print('\nSumario:')
-    print('*Conexion: %s:%d' % (addr, port))
+    print('*Conexion: %s:%d\n' % (addr, port))
     print('*Mensaje enviado: %s' % msg)
     try:
         data = sendMsgDatos(addr, port, msg)

@@ -4,7 +4,7 @@
 ##   - Jorge Machado
 ##   - Mathias Martinez
 
-## Modulo de ClientSocket (ClientSocket.py) ##
+## Modulo de ClientSocket (clientSocket.py) ##
 
 # Definicion de Imports #
 import socket
@@ -12,13 +12,6 @@ import socket
 # Definicion de Constantes #
 SIZE = 1024 # Tamanio del buffer del mensaje
 FORMAT = 'utf-8' # Formato del mensaje
-
-dict server.listaSockets
-
-for compas in Peers:
-    socketcompa = clientsocket()
-    socketcompa.connect(compaip, puertocompa)
-    listaSockets.append((compas, socketcompa))
 
 class ClientSocket:
     # Inicializar el socket del cliente
