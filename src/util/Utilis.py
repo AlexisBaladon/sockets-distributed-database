@@ -4,20 +4,22 @@
 ##   - Jorge Machado
 ##   - Mathias Martinez
 
-## Modulo de Utilidades (Utilis.py) ##
+## Modulo de Utilidades (utilis.py) ##
 
 # Definicion de Imports #
 import ipaddress # Utilizado para checkear direcciones IPv4
 import re # Regex
-from src.exceptions.KeyError import KeyError
-from src.exceptions.MethodError import MethodError
+from src.exceptions.keyError import KeyError
+from src.exceptions.methodError import MethodError
 
 # Definicion de Constantes #
 METHODS = ['GET', 'SET', 'DEL']
 CHARS_TO_FILTER = [" ", "\n", "\r", "\t"]
 
+# Definicion de Funciones #
+
 # Checkea si 'addr' es una direccion IPv4 valida
-def checkIp(addr: str) -> bool:
+def checkIp(addr: str) -> str:
     res = False
     try:
         ip = ipaddress.ip_address(addr)
@@ -25,12 +27,26 @@ def checkIp(addr: str) -> bool:
             res = True
     except ValueError:
         pass
-    return res
+    if (not res):
+        raise ValueError("Formato de direccion IP no valido")
+    return addr
+
+# Checkea si 'port' es un puerto valido
+def checkPort(port: str) -> int:
+    res = False
+    try:
+        port = int(port)
+        if (port >= 0 and port <= 65535):
+                res = True
+    except ValueError:
+        pass
+    if (not res):
+        raise ValueError("Formato de puerto no valido")
+    return int(port)
 
 # Checkea si 'input' NO contiene espacios o caracteres especiales como:
 #   "\n", "\r", "\t"
 def checkStr(value: str) -> bool:
-    print(value)
     for spChar in CHARS_TO_FILTER:
             if spChar in value:
                 return False
@@ -53,12 +69,12 @@ def genMsgDatos(method: str, key: str, value: str) -> str:
                 if (checkStr(value) and not value == ''):
                     message += ' ' + value
                 else:
-                    raise ValueError("El valor %s ingresado no es valido" % value)
+                    raise ValueError("El valor \"%s\" ingresado no es valido" % value)
             return message + '\n'
         else:
-            raise KeyError("La key %s ingresada no es valida" % key)
+            raise KeyError("La key \"%s\" ingresada no es valida" % key)
     else:
-        raise MethodError("Metodo %s no soportado" % method)
+        raise MethodError("Metodo \"%s\" no soportado" % method)
 
 #Devuelve el metodo o None en caso de tener un formato erróneo
 def parseCommand(command: str) -> tuple[str,str,str]:
