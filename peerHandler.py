@@ -1,9 +1,8 @@
 from threading import Lock
 
 class Peer:
-    def __init__(self, server_IP: str, server_port: str, crc: int):
-        self.server_IP: str = server_IP
-        self.server_port: str = server_port
+    def __init__(self, socket, crc: int):
+        self.socket = socket
         self.crc = crc
         return
 
@@ -20,56 +19,46 @@ class PeerHandler:
         self.lock = Lock()
         self.peers: dict = peers
 
-    def acquire(self):
-        self.lock.acquire(blocking=True)
-        return
+    #def acquire(self):
+    #    self.lock.acquire(blocking=True)
+    #    return
     
     #USAR SOLO LUEGO DE ADQUIRIR EL MUTEX
     def get_peers(self):
-        with self.lock:
-            return list(self.peers.values())
+        return list(self.peers.values())
 
-    def release(self):
-        self.lock.release()
-        return
+    def get_peers_keys(self):
+        return list(self.peers.keys())
 
-
-    #def get_peer(self, crc: str):
-    #    with self.lock:
-    #        value = self.peers[crc]
-    #    return value
-#
-    #def set_peer(self, crc: str, peer: Peer):
-    #    with self.lock:
-    #        self.peers[crc] = peer
+    #def release(self):
+    #    self.lock.release()
     #    return
-#
-    #def delete_peer(self, crc: str):
-    #    with self.lock:
-    #        del self.peers[crc]
-    #    return
-
     
     def get_peer(self, crc: str):
         with self.lock:
             value = self.peers[crc]
         return value
     
-    def get_all(self):
-        with self.lock:
-            value = self.peers
-        return value
+#    def get_all(self):
+#        with self.lock:
+#            value = self.peers
+#        return value
 
-    def set_peer(self, peer: Peer):
+    def set_peer(self, addr, port, peer: Peer):
         with self.lock:
-            self.peers[peer.crc] = peer
+            self.peers[self.__format_key(addr, port)] = peer
         return
 
-    def delete_peer(self, crc: str):
+    def delete_peer(self, addr, port):
         with self.lock:
-            del self.peers[crc]
+            del self.peers[self.__format_key(addr, port)]
         return
 
+    # Funciones auxiliares #
+    
+    def __format_key(self, addr, port) -> str:
+        return f'{addr}:{port}'
+        
 ####################
 # MAIN PARA PRUEBAS
 ####################

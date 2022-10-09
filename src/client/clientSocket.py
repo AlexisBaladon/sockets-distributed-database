@@ -15,13 +15,39 @@ FORMAT = 'utf-8' # Formato del mensaje
 
 class ClientSocket:
     # Inicializar el socket del cliente
-    def __init__(self):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    def __init__(self, sock=None):
+        if sock == None:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        else:
+            self.sock = sock
+
+    #######################
+    # Funciones de Server #
+    #######################
+    
+    def accept(self):
+        return self.sock.accept()
+        
+    def listen(self):
+        self.sock.listen()
+        return
+
+    ########################
+    # Funciones de Cliente #
+    ########################
 
     # Conecta con un socket remoto en host:port
     # Nota: Lanza las excepciones TimeoutError y InterruptedError
     def connect(self, host, port):
         self.sock.connect((host, port))
+
+    #######################
+    # Funciones generales #
+    #######################
+    
+    def bind(self, addr, port):
+        self.sock.bind((addr, port))
+        return
 
     # Precondicion: se debe estar conectado con el socket remoto
     def send(self, msg):
@@ -37,7 +63,7 @@ class ClientSocket:
         data = ''
         while not data.endswith("\n"):
             msg = self.sock.recv(SIZE)
-            data += msg.decode("utf-8")
+            data += msg.decode(FORMAT)
         return data
 
     # Finalizar conexion con el socket remoto
