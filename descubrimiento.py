@@ -8,8 +8,8 @@ import time
 import zlib
 from dtServer import DtServer
 from peerHandler import Peer
-from src.server.announceSocket import sendMsgBroadcast
-from src.server.discoverSocket import receiveFromBroadcast
+from src.server.announceSocket import AnnounceSocket
+from src.server.discoverSocket import DiscoverSocket
 from src.client.clientSocket import ClientSocket
 #from src.util.Utilis import checkIp 
 #from src.util.Utilis import genMsgDatos 
@@ -20,16 +20,22 @@ SIZE = 1024 # Tamanio del buffer del mensaje
 FORMAT = 'utf-8' # Formato del mensaje
 
 # Thread recibe y establece nueva conexion
-def DISCOVER(server: DtServer):
+def DISCOVER(server: DtServer, conn: DiscoverSocket):
     while True:
         # Escucha bloqueante por mensaje broadcast de algún peer.
-        (msg, ip) = receiveFromBroadcast(server.descubrimiento_port)
-        if ip != server.ip:
-            # Parsea el mensaje 'ANNOUNCE <port>', devolviendo la lista ['ANNOUNCE', <port>], o None, None.
-            (method, port) = parse_command_ANNOUNCE(msg)
-            # Si ya el primer elemento en esta lista de parseo es "None", es porque el mensaje recibido tiene el formato correcto.
+        (msg, ip) = conn.receive()
+        # Parsea el mensaje 'ANNOUNCE <port>', devolviendo la lista ['ANNOUNCE', <port>], o None, None.
+        (method, port) = parse_command_ANNOUNCE(msg)
+        #FALTA TODO: TODO PERO POR 2: Falta chequear que la pareja (ip, puerto)
+        #No este en la lista de peers
+        if (not (ip == server.ip) and (int(port) == server.datos_port)):
+            # Si ya el primer elemento en esta lista de parseo es "None", es 
+            # porque el mensaje recibido tiene el formato correcto.
             if method is not None:
-                puerto_peer_datos = port    # Del parseo me interesa unicamente el nro. de puerto, el cual lugo utilizo para establecer comunicacion con el server anunciado para el protocolo datos.
+                # Del parseo me interesa unicamente el nro. de puerto, el cual 
+                # luego utilizo para establecer comunicacion con el server 
+                # anunciado para el protocolo datos.
+                puerto_peer_datos = port
             
                 # Abre una conexión TCP al puerto dado para soportar DATOS.
                 socket_datos = ClientSocket()
@@ -42,17 +48,19 @@ def DISCOVER(server: DtServer):
                 nuevo_peer = Peer(socket_datos, str(crc_server_nuevo))
                 server.peers.set_peer(ip, puerto_peer_datos, nuevo_peer)
 
-                # Estuve pensando, y es que a lo mejor nos conviene que la clase Server (o DtServer no se) tenga un atributo como una lista para almacenar estos valores, y reutilizarlos en otro lado.
+                # Estuve pensando, y es que a lo mejor nos conviene que la clase Server 
+                # (o DtServer no se) tenga un atributo como una lista para almacenar estos valores, 
+                # y reutilizarlos en otro lado.
                 recalculados = recalculate_values(server, crc_server_nuevo)
                 deliver_values(recalculados, socket_datos)
     return
 
 # Thread envia
-def ANNOUNCE(server: DtServer):
+def ANNOUNCE(server: DtServer, conn: AnnounceSocket):
     msg = format_command_ANNOUNCE(server.datos_port)
     while True:
         #aviso que existo en broadcast cada 30 segundos
-        sendMsgBroadcast(msg, server.descubrimiento_port)
+        conn.send(msg, server.descubrimiento_port)
         time.sleep(SLEEP_TIME)
     return
 
@@ -78,15 +86,17 @@ def recalculate_values(server: DtServer, crc_server_nuevo):
 #def deliver_values(server: DtServer, ip: str, value: str):
 # Esta nueva definición asume que 'socket_abierto_datos' es parte de una conexion TCP ya hecha y abierta.
 def deliver_values(diccionario_recalculados, socket_abierto_datos):
-    peer_socket = ClientSocket()
-    #peer_socket.send(msg)
-    #Soltar
-
-    #se ejecuta despues de recalculate_values
+    peer_socket = ClientSocket(socket_abierto_datos)
     for i in diccionario_recalculados:
-        peer_socket.send(msg)
-        #socket_abierto_datos.send(diccionario_recalculados[i].encode(FORMAT))
+        peer_socket.send(diccionario_recalculados[i])
+        response = peer_socket.receive()
+        # PUEDE HABER DEADLOCK
+        while response != 'OK\n':
+            peer_socket.send(diccionario_recalculados[i])
+            response = peer_socket.receive()
+            #socket_abierto_datos.send(diccionario_recalculados[i].encode(FORMAT))
     return
+    peer_socket.close()
 
 #Parsing
 def format_command_ANNOUNCE(port: str) -> str:

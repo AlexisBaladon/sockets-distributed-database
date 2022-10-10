@@ -2,48 +2,46 @@ from threading import Lock
 
 class Peer:
     def __init__(self, socket, crc: int):
+        self.lock = Lock()
         self.socket = socket
         self.crc = crc
         return
 
+    def get_data(self, message) -> str:
+        data = ''
+        with self.lock:
+            self.socket.send(message)
+            data = self.socket.receive()
+        return data 
+    
     ################################
     # DE USO EXCLUSIVO PARA PRUEBAS
     ################################
     def show(self):
         print(self.server_IP + '   ' + self.server_port + '   ' + str(self.crc))
         return
-    ###################################
+    #################################
 
 class PeerHandler:
     def __init__(self, peers: dict = {}):
         self.lock = Lock()
         self.peers: dict = peers
 
-    #def acquire(self):
-    #    self.lock.acquire(blocking=True)
-    #    return
-    
-    #USAR SOLO LUEGO DE ADQUIRIR EL MUTEX
     def get_peers(self):
-        return list(self.peers.values())
+        with self.lock:
+            peers = list(self.peers.values())
+        return peers
 
     def get_peers_keys(self):
-        return list(self.peers.keys())
-
-    #def release(self):
-    #    self.lock.release()
-    #    return
-    
-    def get_peer(self, crc: str):
         with self.lock:
-            value = self.peers[crc]
-        return value
-    
-#    def get_all(self):
-#        with self.lock:
-#            value = self.peers
-#        return value
+            keys = list(self.peers.keys())
+        return keys
 
+    def get_peer(self, addr, port):
+        with self.lock:
+            value = self.peers[self.__format_key(addr, port)]
+        return value
+        
     def set_peer(self, addr, port, peer: Peer):
         with self.lock:
             self.peers[self.__format_key(addr, port)] = peer

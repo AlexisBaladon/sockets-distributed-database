@@ -8,10 +8,12 @@
 
 # Definicion de Imports #
 import socket
+from datetime import datetime
 
 # Definicion de Constantes #
 SIZE = 1024 # Tamanio del buffer del mensaje
 FORMAT = 'utf-8' # Formato del mensaje
+WAITING_TIME = 60 # Tiempo de espera por un mensaje (en segundos)
 
 class ClientSocket:
     # Inicializar el socket del cliente
@@ -61,7 +63,11 @@ class ClientSocket:
     # Precondicion: se debe estar conectado con el socket remoto
     def receive(self) -> str:
         data = ''
+        init_time = datetime.now()
         while not data.endswith("\n"):
+            current_time = datetime.now()
+            if  (current_time - init_time).total_seconds() > WAITING_TIME:
+                raise TimeoutError("Tiempo de conexion excedido")
             msg = self.sock.recv(SIZE)
             data += msg.decode(FORMAT)
         return data

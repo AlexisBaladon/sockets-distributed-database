@@ -50,7 +50,7 @@ def handle_args(argv):
 def handle_discover(server: DtServer, conn):
     print(f"[SERVER] DISCOVER PROTOCOL ON")
     try:
-        DISCOVER(server)
+        DISCOVER(server, conn)
     except Exception as e:
         print(f"[SERV_ERR] {str(e)}")
         traceback.print_exc()
@@ -59,7 +59,7 @@ def handle_discover(server: DtServer, conn):
 def handle_announce(server: DtServer, conn):
     print(f"[SERVER] ANNOUNCE PROTOCOL ON")
     try:
-        ANNOUNCE(server)
+        ANNOUNCE(server, conn)
     except Exception as e:
         print(f"[SERV_ERR] {str(e)}")
         traceback.print_exc()
@@ -97,8 +97,8 @@ def main(args):
 
     # Inicializacion del server #
     server = DtServer(ip, datos_port, announce_port, discover_port) 
-    announce_udp_socket = AnnounceSocket() # Crear announce socket
-    discover_udp_socket = DiscoverSocket() # Crear discover socket
+    announce_udp_socket = AnnounceSocket(server.announce_port) # Crear announce socket
+    discover_udp_socket = DiscoverSocket(server.descubrimiento_port) # Crear discover socket
     datos_tcp_socket = ClientSocket() # Crear client socket
     thread_announce = threading.Thread(target=handle_announce, args=(server, announce_udp_socket))
     thread_discover = threading.Thread(target=handle_discover, args=(server, discover_udp_socket))
