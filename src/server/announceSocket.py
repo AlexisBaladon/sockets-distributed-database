@@ -25,6 +25,8 @@ class AnnounceSocket:
         if (len(data) == 0):
             raise RuntimeError("Empty message sent")
         sent = self.sock.sendto(data, (HOST, descubrimiento_port))
+        #sent = self.sock.sendto(data, (HOST, 2024))
+        #sent = self.sock.sendto(data, (HOST, 3024))
         if (sent == 0):
             raise RuntimeError("Socket connection broken")
 
