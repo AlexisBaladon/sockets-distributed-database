@@ -33,7 +33,7 @@ class DtServer:
         (min_ip, min_port) = (self.ip, self.datos_port)
         peers = self.peers.get_peers_keys()
         for peer_key in peers:
-            peer = peers.get_peer(peer_key)
+            peer = self.peers.get_peer(peer_key)
             peer_distance = abs(peer.crc - key_crc)
             if peer_distance < min_distance:
                 min_distance = peer_distance
@@ -61,14 +61,15 @@ class DtServer:
         }
         (method, key, value) = parseCommand(request)
         if method == None:
-            raise MethodError("Comando no soportado: %s" % request)
-        (ip, port) = self.determine_designated_server(key)
+            print("Comando no soportado: %s" % request)
+            return formatResponse(None, None)
+        (ip, port) = self.determine_designated_server(zlib.crc32(key.encode()))
         if (ip == self.ip and port == self.datos_port):
             try:
                 response = database_access[method]["database_access"](key, value)
+                response = formatResponse(method, response)
                 print(database_access[method]["success_msg"](key))
             except KeyError:
-                method = None
                 print(f"[DATABASE] Elemento {key} no encontrado")
         else:
             peer = self.peers.get_peer(ip, port)

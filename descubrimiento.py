@@ -28,31 +28,42 @@ def DISCOVER(server: DtServer, conn: DiscoverSocket):
         (method, port) = parse_command_ANNOUNCE(msg)
         #FALTA TODO: TODO PERO POR 2: Falta chequear que la pareja (ip, puerto)
         #No este en la lista de peers
-        if (not (ip == server.ip) and (int(port) == server.datos_port)):
-            # Si ya el primer elemento en esta lista de parseo es "None", es 
-            # porque el mensaje recibido tiene el formato correcto.
-            if method is not None:
-                # Del parseo me interesa unicamente el nro. de puerto, el cual 
-                # luego utilizo para establecer comunicacion con el server 
-                # anunciado para el protocolo datos.
-                puerto_peer_datos = port
+        if (ip != server.ip or int(port) != server.datos_port):
+            server.peers.acquire()
+            if server.peers.exists(ip, port, lock=False):
+                server.peers.release()
+            else:
+                print(msg, ip)
+                # Si ya el primer elemento en esta lista de parseo es "None", es 
+                # porque el mensaje recibido tiene el formato correcto.
+                if method is not None:
+                    # Del parseo me interesa unicamente el nro. de puerto, el cual 
+                    # luego utilizo para establecer comunicacion con el server 
+                    # anunciado para el protocolo datos.
+                    puerto_peer_datos = port
+                
+                    # Abre una conexión TCP al puerto dado para soportar DATOS.
+                    socket_datos = ClientSocket()
+                    socket_datos.connect(ip, int(puerto_peer_datos))
+
+                    #actualizar lista de server.
+                    server_nuevo = ip + ':' + puerto_peer_datos
+                    enc_server_nuevo = server_nuevo.encode()
+                    crc_server_nuevo = hex(zlib.crc32(enc_server_nuevo))
+                    nuevo_peer = Peer(socket_datos, str(crc_server_nuevo))
+                    server.peers.set_peer(ip, puerto_peer_datos, nuevo_peer, lock = False)
+                    server.peers.release()
+
+                    # Estuve pensando, y es que a lo mejor nos conviene que la clase Server 
+                    # (o DtServer no se) tenga un atributo como una lista para almacenar estos valores, 
+                    # y reutilizarlos en otro lado.
+                    recalculados = recalculate_values(server, crc_server_nuevo)
+                    #print(f"recalculados: {recalculados}")
+                    deliver_values(recalculados, socket_datos)
+
+                    #print(f"hola? {server.peers.show_peers()}")
             
-                # Abre una conexión TCP al puerto dado para soportar DATOS.
-                socket_datos = ClientSocket()
-                socket_datos.connect(ip, int(puerto_peer_datos))
-
-                #actualizar lista de server.
-                server_nuevo = ip + ':' + puerto_peer_datos
-                enc_server_nuevo = server_nuevo.encode()
-                crc_server_nuevo = hex(zlib.crc32(enc_server_nuevo))
-                nuevo_peer = Peer(socket_datos, str(crc_server_nuevo))
-                server.peers.set_peer(ip, puerto_peer_datos, nuevo_peer)
-
-                # Estuve pensando, y es que a lo mejor nos conviene que la clase Server 
-                # (o DtServer no se) tenga un atributo como una lista para almacenar estos valores, 
-                # y reutilizarlos en otro lado.
-                recalculados = recalculate_values(server, crc_server_nuevo)
-                deliver_values(recalculados, socket_datos)
+                
     return
 
 # Thread envia
@@ -72,11 +83,11 @@ def recalculate_values(server: DtServer, crc_server_nuevo):
         clave_valor = i + ':' + valores_servidor_actual[i]
         enc_clave_valor = clave_valor.encode()
         crc_clave_valor = hex(zlib.crc32(enc_clave_valor))
-        diff1 = abs(int(crc_server_nuevo, 16) - int(crc_clave_valor, 16))
-        diff2 = abs(int(server.firma, 16) - int(crc_clave_valor, 16))
+        diff1 = abs(int(crc_server_nuevo) - int(crc_clave_valor))
+        diff2 = abs(int(server.firma) - int(crc_clave_valor))
         if (diff1) <= (diff2):
             # En caso de haber empate de diferencias, se elige el servidor con la firma más baja como el designado a la clave.
-            if int(crc_server_nuevo, 16) < int(server.firma, 16):
+            if int(crc_server_nuevo) < int(server.firma):
                 # Si la firma le corresponde al nuevo servidor, se prepara la clave y su respectivo valor para ser transferido (ya armado con forma de un mensaje SET de DATOS).
                 msg = 'SET ' + i + ' ' + valores_servidor_actual[i] + '\n'
                 valores_a_transferir[crc_clave_valor] = msg

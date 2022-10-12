@@ -8,7 +8,6 @@ class Peer:
         return
 
     def get_data(self, message) -> str:
-        data = ''
         with self.lock:
             self.socket.send(message)
             data = self.socket.receive()
@@ -42,9 +41,14 @@ class PeerHandler:
             value = self.peers[self.__format_key(addr, port)]
         return value
         
-    def set_peer(self, addr, port, peer: Peer):
-        with self.lock:
-            self.peers[self.__format_key(addr, port)] = peer
+    def set_peer(self, addr, port, peer: Peer, lock = True):
+        print("viene peer!", self.peers)
+        if lock:
+            self.lock.acquire()
+        self.peers[self.__format_key(addr, port)] = peer
+        print("nuevo peer!", self.peers)
+        if lock:
+            self.lock.release()
         return
 
     def delete_peer(self, addr, port):
@@ -52,7 +56,26 @@ class PeerHandler:
             del self.peers[self.__format_key(addr, port)]
         return
 
+    def acquire(self):
+        self.lock.acquire()
+
+    def release(self):
+        self.lock.release()
+
+    def exists(self, ip, port, lock = True):
+        if lock:
+            self.lock.acquire()
+        exists_peer = self.__format_key(ip, port) in self.peers.keys()
+        if lock:
+            self.lock.release()
+        return exists_peer
+
     # Funciones auxiliares #
+
+    def show_peers(self):
+        with self.lock:
+            for p in self.peers:
+                print(p)
     
     def __format_key(self, addr, port) -> str:
         return f'{addr}:{port}'

@@ -93,7 +93,7 @@ def parseCommand(command: str) -> tuple[str,str,str]:
     return None, None, None
 
 def formatResponse(method: str, response: str) -> str:
-    if response == None:
+    if method == None:
         return "NO\n"
     if method == "GET":
         return f'OK {response}\n'
