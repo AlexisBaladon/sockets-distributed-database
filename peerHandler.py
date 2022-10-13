@@ -8,6 +8,8 @@ class Peer:
         self.ip = ip
         self.datos_port = datos_port
         self.socket = socket
+        self.ip = ip
+        self.port = port
         self.crc = crc
         return
 

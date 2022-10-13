@@ -42,7 +42,7 @@ class DtServer:
             peer_distance = abs(peer.crc - key_crc)
             if peer_distance < min_distance:
                 min_distance = peer_distance
-                (min_ip, min_port) = peer.ip, peer.datos_port
+                (min_ip, min_port) = peer.ip, peer.port
         return min_ip, min_port
     
     # Procesa la request obteniendo una respuesta acorde al protocolo DATOS
@@ -64,11 +64,12 @@ class DtServer:
                 "success_msg": lambda key: f"[DATABASE] Elemento {key} eliminado"
             },
         }
+        response = formatResponse(None, None)
         (method, key, value) = parseCommand(request)
         if method == None:
             print("Comando no soportado: %s" % request)
-            return formatResponse(None, None)
-        (ip, port) = self.determine_designated_server(zlib.crc32(key.encode()))
+            return response
+        (ip, port) = self.determine_designated_server(int(hex(zlib.crc32(key.encode())), 16))
         if (ip == self.ip and port == self.datos_port):
             try:
                 response = database_access[method]["database_access"](key, value)

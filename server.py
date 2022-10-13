@@ -69,8 +69,8 @@ def handle_client(server: DtServer, conn: ClientSocket, addr_c: str):
     try:
         msg = conn.receive()
         response = server.processRequest(msg)
-        print(response)
         conn.send(response)
+        print(response)
     except Exception as e:
         print(f"[SERV_ERR] {str(e)}")
         traceback.print_exc()

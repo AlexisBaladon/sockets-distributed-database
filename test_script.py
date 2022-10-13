@@ -17,5 +17,6 @@ py client.py localhost 2025 SET 123 456
 
 """
 
-#si cierro uno y lo vuelvo a abrir se rompe
+#si cierro uno y lo vuelvo a abrir se rompe (debe ser por no hacer close)
 #Si haces un get y no te llega te bloqueas
+#No se si estamos guardando los hexadecimales como quieren los profes

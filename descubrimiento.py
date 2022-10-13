@@ -8,7 +8,7 @@ import socket
 import time
 import zlib
 from dtServer import DtServer
-from peerHandler import Peer
+from peerHandler import Peer, PeerHandler
 from src.server.announceSocket import AnnounceSocket
 from src.server.discoverSocket import DiscoverSocket
 from src.client.clientSocket import ClientSocket
