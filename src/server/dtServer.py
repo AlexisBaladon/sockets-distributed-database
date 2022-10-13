@@ -50,18 +50,9 @@ class DtServer:
     def processRequest(self, request: str) -> str:
         response = 'NO\n'
         database_access = {
-            "GET": {
-                "database_access": lambda key, value: self.database.get(key),
-                "success_msg": lambda key: f"[DATABASE] Elemento {key} obtenido"
-            },
-            "SET": {
-                "database_access": self.database.set,
-                "success_msg": lambda key: f"[DATABASE] Valor nuevo almacenado en elemento {key}"
-            },
-            "DEL": {
-                "database_access": lambda key, value: self.database.delete(key),
-                "success_msg": lambda key: f"[DATABASE] Elemento {key} eliminado"
-            },
+            "GET": {"database_access": lambda key, value: self.database.get(key),   "success_msg": lambda key: f"[DATABASE] Elemento {key} obtenido"},
+            "SET": {"database_access": self.database.set,                           "success_msg": lambda key: f"[DATABASE] Valor nuevo almacenado en elemento {key}"},
+            "DEL": {"database_access": lambda key, value: self.database.delete(key),"success_msg": lambda key: f"[DATABASE] Elemento {key} eliminado"},
         }
         response = formatResponse(None, None)
         (method, key, value) = parseCommand(request)
@@ -79,5 +70,9 @@ class DtServer:
                 response = formatResponse(None, None)
         else:
             peer = self.peers.get_peer(ip, port)
+            #try:
             response = peer.get_data(request)
+            #except Exception as e:
+            #    print("Attempt to communicate with disconnected socket. Disconnecting")
+            #    self.peers.delete_peer(ip, port)
         return response

@@ -20,3 +20,11 @@ py client.py localhost 2025 SET 123 456
 #si cierro uno y lo vuelvo a abrir se rompe (debe ser por no hacer close)
 #Si haces un get y no te llega te bloqueas
 #No se si estamos guardando los hexadecimales como quieren los profes
+
+#13/10
+#Cuando haces una conexión tcp en datos no necesariamente queres mandar un mensaje (el connect de discover puede estar causando problemas)
+#El acquire que sacaste estaba bien, tenemos que hablarlo
+#Determine designated creo que no esta calculando bien, 
+#falta checkear los get que pueden no estar almacenados
+#FALTA PONERLE UN TIMEOUT AL ANNOUNCE SOCKET
+#cuando muere discover o client hay que volverlo a prender

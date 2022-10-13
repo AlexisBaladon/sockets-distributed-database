@@ -8,33 +8,52 @@
 
 # Definicion de Imports #
 import re, time, zlib
+from datetime import datetime
 from src.client.clientSocket import ClientSocket
+from src.server import peerHandler
 from src.server.dtServer import DtServer
 from src.server.peerHandler import Peer
 from src.server.announceSocket import AnnounceSocket
 from src.server.discoverSocket import DiscoverSocket
 from src.util.utilis import genMsgDatos, is_minimum
+import threading
 
 # Definicion de Constantes #
 SLEEP_TIME = 5 # Tiempo de espera para enviar mensaje de broadcast ANNOUNCE
 SIZE = 1024 # Tamanio del buffer del mensaje
 FORMAT = 'utf-8' # Formato del mensaje
 
+def check_disconnected_peers(server: DtServer):
+    while True:
+        time.sleep(2*SLEEP_TIME)
+        for peer in server.peers.get_peers():
+            current_time = datetime.now()
+            time_diff = (current_time - peer.last_announce_time).total_seconds()
+            if time_diff > 2*SLEEP_TIME:
+                server.peers.delete_peer(peer.ip, peer.datos_port)
+                peer.socket.close()
+                print("[DSCV] DISCONNECTED SOCKET", peer.ip, peer.datos_port)
+            else:
+                print("no discone")
+        
+
 # Thread recibe y establece nueva conexion
 def DISCOVER(server: DtServer, conn: DiscoverSocket):
+    disconnection_tracker = threading.Thread(target=check_disconnected_peers, args=(server,), daemon=True)
+    disconnection_tracker.start()
+
     while True:
-        # Escucha bloqueante por mensaje broadcast de algún peer.
-        (msg, ip) = conn.receive()
+        (msg, ip) = conn.receive() #TODO: FALTA UN TIMEOUT EN ESTE SOCKET
         # Parsea el mensaje 'ANNOUNCE <port>', devolviendo la lista ['ANNOUNCE', <port>], o None, None.
         (method, port) = parse_command_ANNOUNCE(msg)
-        #FALTA TODO: TODO PERO POR 2: Falta chequear que la pareja (ip, puerto)
-        #No este en la lista de peers
         if (ip != server.ip or int(port) != server.datos_port):
             server.peers.acquire()
             if server.peers.exists(ip, port, lock=False):
                 server.peers.release()
+                peer = server.peers.get_peer(ip, port)
+                peer.last_announce_time = datetime.now()
+                server.peers.set_peer(peer.ip, peer.datos_port, peer) #Importante: Si el servidor lo desconecta en otro hilo esto lo vuelve a conectar (esta bien que lo haga, aunque algun print va a dar un mensaje confuso)
             else:
-                server.peers.release()
                 print(msg, ip)
                 # Si ya el primer elemento en esta lista de parseo es "None", es 
                 # porque el mensaje recibido tiene el formato correcto.
@@ -46,7 +65,6 @@ def DISCOVER(server: DtServer, conn: DiscoverSocket):
                     # Actualizar lista de server.
                     crc_server_nuevo = zlib.crc32(f'{ip}:{port}'.encode())
                     nuevo_peer = Peer(ip, port, socket_datos, crc_server_nuevo)
-                    server.peers.acquire()
                     server.peers.set_peer(ip, int(port), nuevo_peer, lock = False)
                     server.peers.release()
                     print("[DSCV] Se ha conectado con el nuevo peer ", ip, port)

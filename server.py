@@ -52,7 +52,7 @@ def handle_args(argv):
 def handle_discover(server: DtServer, conn):
     print(f"[SERVER] DISCOVER PROTOCOL ON")
     try:
-        DISCOVER(server, conn)  
+        DISCOVER(server, conn)
     except Exception as e:
         print(f"[SERV_ERR] {str(e)}")
         traceback.print_exc()
@@ -68,15 +68,15 @@ def handle_announce(server: DtServer, conn):
     conn.close()
 
 def handle_client(server: DtServer, conn: ClientSocket, addr_c: str):
+    response = "NO\n"
     try:
         msg = conn.receive()
         response = server.processRequest(msg)
-        conn.send(response)
         print(response)
     except Exception as e:
         print(f"[SERV_ERR] {str(e)}")
         traceback.print_exc()
-        #conn.send("NO\n") esto ya se verifica en processRequest
+    conn.send(response)
     conn.close()
     return None
 
@@ -115,6 +115,7 @@ def main(args):
     print(f"[SERVER] Servidor atendiendo DATOS en {ip}:{datos_port}")
     while True:
         continue
+    
 
 # Main Init #
 if __name__ == "__main__":

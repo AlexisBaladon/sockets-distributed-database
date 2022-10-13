@@ -8,18 +8,18 @@
 
 # Definicion de Imports #
 from threading import Lock
+from datetime import datetime
 from src.client.clientSocket import ClientSocket
 
 # Definicion clase Peer #
 class Peer:
     def __init__(self, ip: str, datos_port: int, socket: ClientSocket, crc: int):
         self.lock = Lock()
-        self.ip = ip
-        self.datos_port = datos_port
-        self.socket = socket
-        self.ip = ip
-        self.port = datos_port
-        self.crc = crc
+        self.ip: str = ip
+        self.datos_port: int = datos_port
+        self.socket: ClientSocket = socket
+        self.crc: int = crc
+        self.last_announce_time: datetime = datetime.now()
         return
 
     def get_data(self, message) -> str:
