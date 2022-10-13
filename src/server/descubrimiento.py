@@ -1,20 +1,19 @@
-from hashlib import new
-from xml.dom import ValidationErr
-from src.server.database import Database
+## Redes de Computadoras 2022 - Facultad de Ingenieria - UdelaR
+## GRUPO 16:
+##   - Alexis Badalon
+##   - Jorge Machado
+##   - Mathias Martinez
 
+## Modulo de Descubrimiento (descubrimiento.py) ##
 
-import re
-import socket
-import time
-import zlib
-from dtServer import DtServer
-from peerHandler import Peer, PeerHandler
+# Definicion de Imports #
+import re, time, zlib
+from src.client.clientSocket import ClientSocket
+from src.server.dtServer import DtServer
+from src.server.peerHandler import Peer
 from src.server.announceSocket import AnnounceSocket
 from src.server.discoverSocket import DiscoverSocket
-from src.client.clientSocket import ClientSocket
-from src.util.utilis import genMsgDatos
-#from src.util.Utilis import checkIp 
-#from src.util.Utilis import genMsgDatos 
+from src.util.utilis import genMsgDatos, is_minimum
 
 # Definicion de Constantes #
 SLEEP_TIME = 5 # Tiempo de espera para enviar mensaje de broadcast ANNOUNCE
@@ -72,13 +71,6 @@ def ANNOUNCE(server: DtServer, conn: AnnounceSocket):
         time.sleep(SLEEP_TIME)
     return
 
-# Retorna true si la distancia entre input_value y value1 es menor o igual que
-# la distancia entre input_value y value2
-def is_minimum(input_value: int, value1: int, value2: int) -> bool:
-    diff1 = input_value - value1
-    diff2 = input_value - value2
-    return (abs(diff1) <= abs(diff2))
-
 # NOTA DE MIGUE, FAVOR LEER:
 # Este es el nuevo recalculate_values que hice:
 # Si se llama a esta funcion es porque se descubrio un solo servidor nuevo.
@@ -120,7 +112,8 @@ def deliver_values(server: DtServer, keys_to_deliver: set, new_server_peer: Peer
             raise RuntimeError("Ocurrio un error inesperado al enviar las claves a un peer desde ", server.ip)
     return keys_with_errors
 
-#Parsing
+# Funciones auxiliares #
+
 def format_command_ANNOUNCE(port: str) -> str:
     return f"ANNOUNCE {port}\n"
 
@@ -135,45 +128,3 @@ def parse_command_ANNOUNCE(command: str) -> tuple[str, str]:
             value = method_match.group(1)
             return method, value
     return None, None
-
-# PARA PRUEBAS
-if __name__ == '__main__':
-#    res = parse_command_ANNOUNCE('ANNOUNCE dfs1234\n')
-#    if res[0] is not None:
-#        print(res)
-#    else:
-#        print('NNOOOUUUPPP')
-
-    mi_server = '192.168.0.100' + ':' + '2022'
-    enc_mi_server = mi_server.encode()
-    crc_mi_server = hex(zlib.crc32(enc_mi_server))
-
-    server_nuevo = '10.1.0.1' + ':' + '2022'
-    enc_server_nuevo = server_nuevo.encode()
-    crc_server_nuevo = hex(zlib.crc32(enc_server_nuevo))
-
-    valores_a_transferir = dict()
-    valores_servidor_actual = Database()
-    valores_servidor_actual.set('clave1', 'valor1')
-    crc_valor1 = hex(zlib.crc32(('clave1:valor1').encode()))
-    print('Firma clave1 (y en decimal): ' + crc_valor1 + ' (' + str(int(crc_valor1, 16)) + ')')
-    valores_servidor_actual.set('clave2', 'valor2')
-    crc_valor2 = hex(zlib.crc32(('clave2:valor2').encode()))
-    print('Firma clave2 (y en decimal): ' + crc_valor2 + ' (' + str(int(crc_valor2, 16)) + ')')
-    valores = valores_servidor_actual.get_all()
-    for i in valores:
-        clave_valor = i + ':' + valores[i]
-        enc_clave_valor = clave_valor.encode()
-        crc_clave_valor = hex(zlib.crc32(enc_clave_valor))
-        if (abs(int(crc_server_nuevo, 16)-int(crc_clave_valor, 16))) < (abs(int(crc_mi_server, 16)-int(crc_clave_valor, 16))):
-            msg = 'SET ' + i + ' ' + valores[i] + '\n'
-            valores_a_transferir[crc_clave_valor] = msg
-    
-    print('Firma server actual (y en decimal): ' + crc_mi_server + ' (' + str(int(crc_mi_server, 16)) + ')')
-    print('Firma server nuevo (y en decimal): ' + crc_server_nuevo + ' (' + str(int(crc_server_nuevo, 16)) + ')')
-
-    print('Valores antes del recalculo...')
-    valores_servidor_actual.show()
-
-    print('Valores que van al nuevo server despues del recalculo...')
-    print(valores_a_transferir)

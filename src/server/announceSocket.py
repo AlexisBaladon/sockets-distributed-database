@@ -1,13 +1,20 @@
-import socket
-import zlib
+## Redes de Computadoras 2022 - Facultad de Ingenieria - UdelaR
+## GRUPO 16:
+##   - Alexis Badalon
+##   - Jorge Machado
+##   - Mathias Martinez
 
+## Modulo de AnnounceSocket (announceSocket.py) ##
+
+# Definicion de Imports #
+import socket
+
+# Definicion de Constantes #
 SIZE = 1024
 FORMAT = 'utf-8'
 HOST = '<broadcast>'
 
-
-# ESTA CLASE ES SOLO PARA CREAR EL SOCKET UDP PARA ENVIAR MENSAJES DE BROADCAST.
-# SE SUPONE QUE NO RECIBE NADA PORQUE SERAN LOS PEERS QUIENES SE ENCARGUEN DE ABRIR UNA PETICION PARA DATOS CON EL PUERTO ENVIADO.
+# Definicion clase AnnounceSocket #
 class AnnounceSocket:
     # Inicializar el socket de mensajes de broadcast para el servidor
     def __init__(self, port: int):
@@ -29,16 +36,3 @@ class AnnounceSocket:
         sent = self.sock.sendto(data, (HOST, 2037)) #agregar mas de ser necesario
         if (sent == 0):
             raise RuntimeError("Socket connection broken")
-
-#PARA PRUEBAS
-if __name__ == "__main__":
-
-    msg = '127.0.0.1' + ':' + '2022\n'
-    print(msg)
-    enc_msg = msg.encode()
-    #bmsg = bytes(msg, 'utf-8')
-    print(hex(zlib.crc32(enc_msg)))
-
-    ann_sock = AnnounceSocket()
-    message = 'ANNOUNCE 1986\n'
-    ann_sock.send(message, 2022)

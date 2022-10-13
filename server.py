@@ -7,18 +7,18 @@
 ##   - Mathias Martinez
 
 ## Modulo Principal de Server (server.py) ##
-import socket
-import getopt, sys
-import threading
-import traceback
-from dtServer import DtServer
-from descubrimiento import DISCOVER, ANNOUNCE
+
+# Definicion de Imports #
+import getopt, socket, sys, threading, traceback
 from src.client.clientSocket import ClientSocket, getLocalhost
 from src.exceptions.argumentError import ArgumentError
+from src.server.dtServer import DtServer
+from src.server.descubrimiento import DISCOVER, ANNOUNCE
 from src.server.announceSocket import AnnounceSocket
 from src.server.discoverSocket import DiscoverSocket
 from src.util.utilis import checkIp, checkPort
 
+# Definicion de Constantes #
 DEFAULT_DATOS_PORT = 32000
 DEFAULT_ANNOUNCE_PORT = 32001
 DEFAULT_DISCOVER_PORT = 32002
@@ -31,6 +31,8 @@ HELP = [("client.py [options] | <ServerIP> <ServerDatosPort> "
     "  ServerAnnouncePort: Puerto del servidor de ANNOUNCE\n"
     "  ServerDiscoverPort: Puerto del servidor de DESCUBRIMIENTO\n"
     "Options:\n  -h:    Imprime el texto de ayuda")]
+
+# Definicion de Funciones #
 
 def handle_args(argv):
     opts, args = getopt.getopt(argv,"h")
@@ -87,6 +89,8 @@ def handle_datos(server: DtServer, conn: ClientSocket):
         thread_client = threading.Thread(target=handle_client, args=(server, ClientSocket(conn_c), addr_c), daemon=True)
         thread_client.start()
 
+# Funcion principal #
+
 def main(args):
     try:
         ip, datos_port, announce_port, discover_port = handle_args(args)
@@ -111,12 +115,6 @@ def main(args):
     print(f"[SERVER] Servidor atendiendo DATOS en {ip}:{datos_port}")
     while True:
         continue
-        
-    #datos_tcp_socket.close() Se encarga la libreria????????
-    # Revisar en socket.python.com (url no real no entrar pls)
-    #                                               ^  
-    #                                               |
-    #                                               |
 
 # Main Init #
 if __name__ == "__main__":
@@ -125,19 +123,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         # Si hay Cntr + C matar todos los threads
         print("[SERVER] Deteniendo servidor")
-
-
-#MAIN:
-#   precondiciones---
-#   thread iniciando anounce socket
-#   thread iniciando discover socket
-#   thread (que va a tener otros subthreads) con atencion a client (clientsocket)
-#   a partir de aca, tenemos el thead "principal"
-#   while (true)
-#       donde chequea entradas de consola
-#       puede matar el proceso dada una entrada
-#       o mostrar datos del server, como por ejemplo datos de la base de datos
-#       ## server.getkeys o server.getvalues, opt: server.setkeys
-#
-#
-#        traceback.print_exc() # imprime stack

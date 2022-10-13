@@ -15,6 +15,7 @@ SIZE = 1024 # Tamanio del buffer del mensaje
 FORMAT = 'utf-8' # Formato del mensaje
 WAITING_TIME = 60 # Tiempo de espera por un mensaje (en segundos)
 
+# Definicion clase ClientSocket #
 class ClientSocket:
     # Inicializar el socket del cliente
     def __init__(self, sock=None):

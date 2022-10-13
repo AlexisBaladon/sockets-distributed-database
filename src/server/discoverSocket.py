@@ -1,12 +1,20 @@
+## Redes de Computadoras 2022 - Facultad de Ingenieria - UdelaR
+## GRUPO 16:
+##   - Alexis Badalon
+##   - Jorge Machado
+##   - Mathias Martinez
+
+## Modulo de DiscoverSocket (discoverSocket.py) ##
+
+# Definicion de Imports #
 import socket
 
+# Definicion de Constantes #
 SIZE = 1024
 FORMAT = 'utf-8'
 HOST = ''   # HAY QUE VER SI NO ES '<broadcast>' COMO EN AnnounceSocket.py
 
-
-# ESTA CLASE ES SOLO PARA ESCUCHAR MENSAJES DE PUERTO Y SOCKET EN BROADCAST.
-# 
+# Definicion clase DiscoverSocket #
 class DiscoverSocket:
     # Inicializar el socket de mensajes de broadcast para el servidor
     def __init__(self, port: int):
@@ -24,10 +32,3 @@ class DiscoverSocket:
             msg, (ip, port) = self.sock.recvfrom(SIZE)
             data += msg.decode(FORMAT)
         return [data, ip]
-
-
-# PARA PRUEBAS
-#if __name__ == "__main__":
-#    while True:
-#        message = receiveFromBroadcast(2022)
-#        print(message)

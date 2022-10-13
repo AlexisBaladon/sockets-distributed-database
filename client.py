@@ -14,7 +14,6 @@ from src.client.clientSocket import getLocalhost, sendMsgDatos
 from src.util.utilis import checkIp, checkPort, genMsgDatos, parseCommand
 
 # Definicion de Constantes #
-
 HELP = ["client.py [options] | <ServerIP> <ServerPort> <Op> <Key> [<Value>]\n",
     (" ServerIP:        Dirección IP del servidor al que se desea conectar\n"
     "  ServerPort:      Puerto del servidor al que se desea conectar\n"
