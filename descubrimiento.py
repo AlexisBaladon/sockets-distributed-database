@@ -7,7 +7,7 @@ import socket
 import time
 import zlib
 from dtServer import DtServer
-from peerHandler import Peer
+from peerHandler import Peer, PeerHandler
 from src.server.announceSocket import AnnounceSocket
 from src.server.discoverSocket import DiscoverSocket
 from src.client.clientSocket import ClientSocket
@@ -50,7 +50,7 @@ def DISCOVER(server: DtServer, conn: DiscoverSocket):
                     server_nuevo = ip + ':' + puerto_peer_datos
                     enc_server_nuevo = server_nuevo.encode()
                     crc_server_nuevo = hex(zlib.crc32(enc_server_nuevo))
-                    nuevo_peer = Peer(socket_datos, str(crc_server_nuevo))
+                    nuevo_peer = Peer(socket_datos, ip, puerto_peer_datos, int(crc_server_nuevo, 16))
                     server.peers.set_peer(ip, puerto_peer_datos, nuevo_peer, lock = False)
                     server.peers.release()
 
@@ -83,28 +83,27 @@ def recalculate_values(server: DtServer, crc_server_nuevo):
         clave_valor = i + ':' + valores_servidor_actual[i]
         enc_clave_valor = clave_valor.encode()
         crc_clave_valor = hex(zlib.crc32(enc_clave_valor))
-        diff1 = abs(int(crc_server_nuevo) - int(crc_clave_valor))
-        diff2 = abs(int(server.firma) - int(crc_clave_valor))
+        diff1 = abs(int(crc_server_nuevo, 16) - int(crc_clave_valor, 16))
+        diff2 = abs(int(server.firma, 16) - int(crc_clave_valor, 16))
         if (diff1) <= (diff2):
             # En caso de haber empate de diferencias, se elige el servidor con la firma más baja como el designado a la clave.
-            if int(crc_server_nuevo) < int(server.firma):
+            if int(crc_server_nuevo, 16) < int(server.firma, 16):
                 # Si la firma le corresponde al nuevo servidor, se prepara la clave y su respectivo valor para ser transferido (ya armado con forma de un mensaje SET de DATOS).
                 msg = 'SET ' + i + ' ' + valores_servidor_actual[i] + '\n'
-                valores_a_transferir[crc_clave_valor] = msg
+                valores_a_transferir[crc_clave_valor] = msg #TODO: No tiene sentido indexar por crc...
             # Si la firma más baja es la de este servidor, entonces no se hace nada (i.e.: conserva la <clave, valor>).
     return valores_a_transferir
     
 #def deliver_values(server: DtServer, ip: str, value: str):
 # Esta nueva definición asume que 'socket_abierto_datos' es parte de una conexion TCP ya hecha y abierta.
 def deliver_values(diccionario_recalculados, socket_abierto_datos):
-    peer_socket = ClientSocket(socket_abierto_datos)
     for i in diccionario_recalculados:
-        peer_socket.send(diccionario_recalculados[i])
-        response = peer_socket.receive()
+        socket_abierto_datos.send(diccionario_recalculados[i]) #TODO: Se esta mandando mensajes a si mismo?????????????????
+        response = socket_abierto_datos.receive() #comente cosas porque estaba tood muy dudoso
         # PUEDE HABER DEADLOCK
-        while response != 'OK\n':
-            peer_socket.send(diccionario_recalculados[i])
-            response = peer_socket.receive()
+        #while response != 'OK\n':
+        #peer_socket.send(diccionario_recalculados[i])
+        #response = peer_socket.receive()
             #socket_abierto_datos.send(diccionario_recalculados[i].encode(FORMAT))
     return
     peer_socket.close()

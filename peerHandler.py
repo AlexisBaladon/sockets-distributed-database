@@ -1,9 +1,11 @@
 from threading import Lock
 
 class Peer:
-    def __init__(self, socket, crc: int):
+    def __init__(self, socket, ip: str, port: int, crc: int):
         self.lock = Lock()
         self.socket = socket
+        self.ip = ip
+        self.port = port
         self.crc = crc
         return
 
