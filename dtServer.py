@@ -28,12 +28,17 @@ class DtServer:
 
     # Determina el servidor reponsable de la key
     # Retorna ip y puerto de datos del responsable
+
+    # NOTA: observar que para operar con hexademcimales 'a' y 'b' es necesario:
+    # int(a, 16) o int(a, 16) (donde o es la operacion deseada, i.e. +, -, etc)
+    # previamente, es necesario convertir el hexadecimal (que estaba guardado
+    #  como un decimal por alguna razon) utilizando hex()
     def determine_designated_server(self, key_crc: int):
         min_distance = abs(self.firma - key_crc)
         (min_ip, min_port) = (self.ip, self.datos_port)
         peers = self.peers.get_peers_keys()
         for peer_key in peers:
-            peer = self.peers.get_peer(peer_key)
+            peer = self.peers.get_peer_by_key_format(peer_key)
             peer_distance = abs(peer.crc - key_crc)
             if peer_distance < min_distance:
                 min_distance = peer_distance
@@ -44,7 +49,7 @@ class DtServer:
     # En caso de ser necesario, envia la peticion a otro servidor responsable
     # En caso de error con el metodo se lanza la excepcion MethodError
     def processRequest(self, request: str) -> str:
-        response = ''
+        response = 'NO\n'
         database_access = {
             "GET": {
                 "database_access": lambda key, value: self.database.get(key),
@@ -71,6 +76,7 @@ class DtServer:
                 print(database_access[method]["success_msg"](key))
             except KeyError:
                 print(f"[DATABASE] Elemento {key} no encontrado")
+                response = formatResponse(None, None)
         else:
             peer = self.peers.get_peer(ip, port)
             response = peer.get_data(request)

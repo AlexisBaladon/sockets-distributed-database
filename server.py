@@ -50,7 +50,7 @@ def handle_args(argv):
 def handle_discover(server: DtServer, conn):
     print(f"[SERVER] DISCOVER PROTOCOL ON")
     try:
-        DISCOVER(server, conn)
+        DISCOVER(server, conn)  
     except Exception as e:
         print(f"[SERV_ERR] {str(e)}")
         traceback.print_exc()
@@ -73,6 +73,7 @@ def handle_client(server: DtServer, conn: ClientSocket, addr_c: str):
         conn.send(response)
     except Exception as e:
         print(f"[SERV_ERR] {str(e)}")
+        traceback.print_exc()
         #conn.send("NO\n") esto ya se verifica en processRequest
     conn.close()
     return None
@@ -83,7 +84,7 @@ def handle_datos(server: DtServer, conn: ClientSocket):
     while True:
         conn_c, addr_c = conn.accept()
         print(f"[NUEVA_CONEXION] {addr_c} conectado.")
-        thread_client = threading.Thread(target=handle_client, args=(server, ClientSocket(conn_c), addr_c))
+        thread_client = threading.Thread(target=handle_client, args=(server, ClientSocket(conn_c), addr_c), daemon=True)
         thread_client.start()
 
 def main(args):
@@ -101,15 +102,16 @@ def main(args):
     announce_udp_socket = AnnounceSocket(server.announce_port) # Crear announce socket
     discover_udp_socket = DiscoverSocket(server.descubrimiento_port) # Crear discover socket
     datos_tcp_socket = ClientSocket() # Crear client socket
-    thread_announce = threading.Thread(target=handle_announce, args=(server, announce_udp_socket))
-    thread_discover = threading.Thread(target=handle_discover, args=(server, discover_udp_socket))
-    thread_datos = threading.Thread(target=handle_datos, args=(server, datos_tcp_socket))
+    thread_announce = threading.Thread(target=handle_announce, args=(server, announce_udp_socket), daemon=True)
+    thread_discover = threading.Thread(target=handle_discover, args=(server, discover_udp_socket), daemon=True)
+    thread_datos = threading.Thread(target=handle_datos, args=(server, datos_tcp_socket), daemon=True)
     thread_announce.start()
     thread_discover.start()
     thread_datos.start()
     print(f"[SERVER] Servidor atendiendo DATOS en {ip}:{datos_port}")
     while True:
         continue
+        
     #datos_tcp_socket.close() Se encarga la libreria????????
     # Revisar en socket.python.com (url no real no entrar pls)
     #                                               ^  
@@ -118,7 +120,12 @@ def main(args):
 
 # Main Init #
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    try:
+        main(sys.argv[1:])
+    except KeyboardInterrupt:
+        # Si hay Cntr + C matar todos los threads
+        print("[SERVER] Deteniendo servidor")
+
 
 #MAIN:
 #   precondiciones---

@@ -70,6 +70,7 @@ class ClientSocket:
                 raise TimeoutError("Tiempo de conexion excedido")
             msg = self.sock.recv(SIZE)
             data += msg.decode(FORMAT)
+        print (data)
         return data
 
     # Finalizar conexion con el socket remoto

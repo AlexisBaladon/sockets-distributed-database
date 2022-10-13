@@ -1,3 +1,4 @@
+from hashlib import new
 from xml.dom import ValidationErr
 from src.server.database import Database
 
@@ -11,6 +12,7 @@ from peerHandler import Peer
 from src.server.announceSocket import AnnounceSocket
 from src.server.discoverSocket import DiscoverSocket
 from src.client.clientSocket import ClientSocket
+from src.util.utilis import genMsgDatos
 #from src.util.Utilis import checkIp 
 #from src.util.Utilis import genMsgDatos 
 
@@ -33,37 +35,32 @@ def DISCOVER(server: DtServer, conn: DiscoverSocket):
             if server.peers.exists(ip, port, lock=False):
                 server.peers.release()
             else:
+                server.peers.release()
                 print(msg, ip)
                 # Si ya el primer elemento en esta lista de parseo es "None", es 
                 # porque el mensaje recibido tiene el formato correcto.
-                if method is not None:
-                    # Del parseo me interesa unicamente el nro. de puerto, el cual 
-                    # luego utilizo para establecer comunicacion con el server 
-                    # anunciado para el protocolo datos.
-                    puerto_peer_datos = port
-                
+                if method is not None:                
                     # Abre una conexión TCP al puerto dado para soportar DATOS.
                     socket_datos = ClientSocket()
-                    socket_datos.connect(ip, int(puerto_peer_datos))
+                    socket_datos.connect(ip, int(port))
 
-                    #actualizar lista de server.
-                    server_nuevo = ip + ':' + puerto_peer_datos
-                    enc_server_nuevo = server_nuevo.encode()
-                    crc_server_nuevo = hex(zlib.crc32(enc_server_nuevo))
-                    nuevo_peer = Peer(socket_datos, str(crc_server_nuevo))
-                    server.peers.set_peer(ip, puerto_peer_datos, nuevo_peer, lock = False)
+                    # Actualizar lista de server.
+                    crc_server_nuevo = zlib.crc32(f'{ip}:{port}'.encode())
+                    nuevo_peer = Peer(ip, port, socket_datos, crc_server_nuevo)
+                    server.peers.acquire()
+                    server.peers.set_peer(ip, int(port), nuevo_peer, lock = False)
                     server.peers.release()
+                    print("[DSCV] Se ha conectado con el nuevo peer ", ip, port)
 
-                    # Estuve pensando, y es que a lo mejor nos conviene que la clase Server 
-                    # (o DtServer no se) tenga un atributo como una lista para almacenar estos valores, 
-                    # y reutilizarlos en otro lado.
-                    recalculados = recalculate_values(server, crc_server_nuevo)
-                    #print(f"recalculados: {recalculados}")
-                    deliver_values(recalculados, socket_datos)
-
-                    #print(f"hola? {server.peers.show_peers()}")
-            
-                
+                    # Calcular las keys a enviar al nuevo peer
+                    keys_enviar = recalculate_values(server, crc_server_nuevo)
+                    # Enviar y borrar de la base las keys anteriores
+                    try:
+                        keys_err = deliver_values(server, keys_enviar, nuevo_peer)
+                        print(("[DSCV] Se enviaron ", len(keys_enviar) - len(keys_err)), 
+                        " datos con exito a ", ip, port, ". Envios erroneos: ", len(keys_err))
+                    except RuntimeError as e:
+                        print("[DSCV_ERR] " + str(e))
     return
 
 # Thread envia
@@ -75,39 +72,53 @@ def ANNOUNCE(server: DtServer, conn: AnnounceSocket):
         time.sleep(SLEEP_TIME)
     return
 
-def recalculate_values(server: DtServer, crc_server_nuevo):
-    # Declarar una lista de retorno, inicialmente vacia
-    valores_a_transferir = dict()
-    valores_servidor_actual = server.database.get_all()
-    for i in valores_servidor_actual:
-        clave_valor = i + ':' + valores_servidor_actual[i]
-        enc_clave_valor = clave_valor.encode()
-        crc_clave_valor = hex(zlib.crc32(enc_clave_valor))
-        diff1 = abs(int(crc_server_nuevo) - int(crc_clave_valor))
-        diff2 = abs(int(server.firma) - int(crc_clave_valor))
-        if (diff1) <= (diff2):
-            # En caso de haber empate de diferencias, se elige el servidor con la firma más baja como el designado a la clave.
-            if int(crc_server_nuevo) < int(server.firma):
-                # Si la firma le corresponde al nuevo servidor, se prepara la clave y su respectivo valor para ser transferido (ya armado con forma de un mensaje SET de DATOS).
-                msg = 'SET ' + i + ' ' + valores_servidor_actual[i] + '\n'
-                valores_a_transferir[crc_clave_valor] = msg
-            # Si la firma más baja es la de este servidor, entonces no se hace nada (i.e.: conserva la <clave, valor>).
-    return valores_a_transferir
-    
-#def deliver_values(server: DtServer, ip: str, value: str):
-# Esta nueva definición asume que 'socket_abierto_datos' es parte de una conexion TCP ya hecha y abierta.
-def deliver_values(diccionario_recalculados, socket_abierto_datos):
-    peer_socket = ClientSocket(socket_abierto_datos)
-    for i in diccionario_recalculados:
-        peer_socket.send(diccionario_recalculados[i])
-        response = peer_socket.receive()
-        # PUEDE HABER DEADLOCK
-        while response != 'OK\n':
-            peer_socket.send(diccionario_recalculados[i])
-            response = peer_socket.receive()
-            #socket_abierto_datos.send(diccionario_recalculados[i].encode(FORMAT))
-    return
-    peer_socket.close()
+# Retorna true si la distancia entre input_value y value1 es menor o igual que
+# la distancia entre input_value y value2
+def is_minimum(input_value: int, value1: int, value2: int) -> bool:
+    diff1 = input_value - value1
+    diff2 = input_value - value2
+    return (abs(diff1) <= abs(diff2))
+
+# NOTA DE MIGUE, FAVOR LEER:
+# Este es el nuevo recalculate_values que hice:
+# Si se llama a esta funcion es porque se descubrio un solo servidor nuevo.
+# Por lo tanto, solo es necesario comparar la distancia del CRC32 de las keys
+# con el server nuevo, si este es menor a la distancia con el server actual
+# recien ahi se mandan las claves (NO SE RECALCULA NADA! LOS VALORES CRC SON CONSTANTES!)
+def recalculate_values(server: DtServer, crc_new_server: int) -> set:
+    claves_a_enviar = set()
+    claves_actuales = server.database.get_all()
+    for key in claves_actuales:
+        # Se usa el not en el if para hacer que la clave quede en el server actual
+        # en caso de que la distancia entre ambos servers con la key sea la misma
+        if not (is_minimum(zlib.crc32(key.encode()), server.firma, crc_new_server)):
+            claves_a_enviar.add(key)
+    return claves_a_enviar
+
+# Envia las claves 'keys_to_deliver' al peer 'new_server_peer'
+# Luego de enviada una clave, se la borra de la base de datos del server actual
+# Si se rompe el socket con el peer, o ocurre un error inesperado se lanza RuntimeError
+def deliver_values(server: DtServer, keys_to_deliver: set, new_server_peer: Peer) -> set:
+    keys_with_errors = set()
+    for key in keys_to_deliver:
+        try:
+            # Generamos la request para enviar la key al server nuevo
+            req = genMsgDatos('SET', key, server.database.get(key))
+            # Enviamos la key con su value al server nuevo, obtenemos respuesta
+            resp = new_server_peer.get_data(req)
+            if (resp == "OK\n"):
+                # Dato enviado correctamente, se elimina de la database actual
+                server.database.delete(key)
+            else:
+                # Ocurrio un error, no se envia el dato y se la deja en el server
+                keys_with_errors.add(key)
+        except (TimeoutError, RuntimeError):
+            # Se rompio la conexion con el servidor nuevo, parar!
+            raise RuntimeError("La conexion de ", server.ip, " con el peer con firma ", str(hex(new_server_peer.crc)), " se rompio")
+        except Exception:
+            # Ocurrio un error inesperado... Parar!
+            raise RuntimeError("Ocurrio un error inesperado al enviar las claves a un peer desde ", server.ip)
+    return keys_with_errors
 
 #Parsing
 def format_command_ANNOUNCE(port: str) -> str:

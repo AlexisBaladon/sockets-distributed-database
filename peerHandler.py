@@ -1,8 +1,12 @@
 from threading import Lock
 
+from src.client.clientSocket import ClientSocket
+
 class Peer:
-    def __init__(self, socket, crc: int):
+    def __init__(self, ip: str, datos_port: int, socket: ClientSocket, crc: int):
         self.lock = Lock()
+        self.ip = ip
+        self.datos_port = datos_port
         self.socket = socket
         self.crc = crc
         return
@@ -36,17 +40,20 @@ class PeerHandler:
             keys = list(self.peers.keys())
         return keys
 
+    def get_peer_by_key_format(self, key_format):
+        with self.lock:
+            value = self.peers[key_format]
+        return value
+
     def get_peer(self, addr, port):
         with self.lock:
             value = self.peers[self.__format_key(addr, port)]
         return value
         
     def set_peer(self, addr, port, peer: Peer, lock = True):
-        print("viene peer!", self.peers)
         if lock:
             self.lock.acquire()
         self.peers[self.__format_key(addr, port)] = peer
-        print("nuevo peer!", self.peers)
         if lock:
             self.lock.release()
         return
