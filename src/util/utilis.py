@@ -98,3 +98,10 @@ def formatResponse(method: str, response: str) -> str:
     if method == "GET":
         return f'OK {response}\n'
     return 'OK\n'
+
+# Retorna true si la distancia entre input_value y value1 es menor o igual que
+# la distancia entre input_value y value2
+def is_minimum(input_value: int, value1: int, value2: int) -> bool:
+    diff1 = input_value - value1
+    diff2 = input_value - value2
+    return (abs(diff1) <= abs(diff2))

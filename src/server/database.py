@@ -9,6 +9,7 @@
 # Definicion de Imports #
 from threading import Lock
 
+# Definicion clase Database #
 class Database:
     def __init__(self):
         self.database: dict(str) = {}

@@ -1,7 +1,16 @@
-from threading import Lock
+## Redes de Computadoras 2022 - Facultad de Ingenieria - UdelaR
+## GRUPO 16:
+##   - Alexis Badalon
+##   - Jorge Machado
+##   - Mathias Martinez
 
+## Modulo de Peer y PeerHandler (peerHandler.py) ##
+
+# Definicion de Imports #
+from threading import Lock
 from src.client.clientSocket import ClientSocket
 
+# Definicion clase Peer #
 class Peer:
     def __init__(self, ip: str, datos_port: int, socket: ClientSocket, crc: int):
         self.lock = Lock()
@@ -9,7 +18,7 @@ class Peer:
         self.datos_port = datos_port
         self.socket = socket
         self.ip = ip
-        self.port = port
+        self.port = datos_port
         self.crc = crc
         return
 
@@ -27,6 +36,7 @@ class Peer:
         return
     #################################
 
+# Definicion clase PeerHandler #
 class PeerHandler:
     def __init__(self, peers: dict = {}):
         self.lock = Lock()
@@ -88,40 +98,3 @@ class PeerHandler:
     
     def __format_key(self, addr, port) -> str:
         return f'{addr}:{port}'
-        
-####################
-# MAIN PARA PRUEBAS
-####################
-if __name__ == '__main__':
-    peer1 = Peer('190.120.5.132', '8888', '0xA109F5')
-    peer2 = Peer('120.0.15.111', '37652', '0xABCDEF')
-    peer3 = Peer('10.1.1.5', '342189', '0x784C00')
-    manejador_peers = PeerHandler()
-    try:
-        print('Cargando peers...')
-        manejador_peers.set_peer(peer1)
-        manejador_peers.set_peer(peer2)
-        manejador_peers.set_peer(peer3)
-    except:
-        print('Error al setar peers.')
-    try:
-        print('Mostrando peers...')
-        mis_peers = manejador_peers.get_all()
-        for i in mis_peers:
-            mis_peers[i].show()
-    except:
-        print('Error al mostrar los peers.')
-    try:
-        print('Buscando un peer...')
-        res_per = manejador_peers.get_peer('0xABCDEF')
-        res_per.show()
-    except:
-        print('No fue posible encontrar el peer.')
-    try:
-        print('Borrando un peer...')
-        manejador_peers.delete_peer('0xABCDEF')
-        mis_peers = manejador_peers.get_all()
-        for i in mis_peers:
-            mis_peers[i].show()
-    except:
-        print('Fallo al eliminar el peer...')

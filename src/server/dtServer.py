@@ -7,11 +7,10 @@
 ## Modulo de DtServer (dtServer.py) ##
 
 # Definicion de Imports #
-from peerHandler import PeerHandler
-from src.exceptions.methodError import MethodError
+import zlib
+from src.server.peerHandler import PeerHandler
 from src.server.database import Database
 from src.util.utilis import parseCommand, formatResponse
-import zlib
 
 # Definicion de Clase DtServer #
 class DtServer:
