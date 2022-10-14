@@ -42,7 +42,7 @@ class ClientSocket:
     # Conecta con un socket remoto en host:port
     # Nota: Lanza las excepciones TimeoutError y InterruptedError
     def connect(self, host, port):
-        self.sock.connect((host, port))
+        self.sock.connect((host, int(port)))
 
     #######################
     # Funciones generales #

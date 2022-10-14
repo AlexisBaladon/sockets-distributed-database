@@ -10,11 +10,9 @@
 import re, time, zlib
 from datetime import datetime
 from src.client.clientSocket import ClientSocket
-from src.server import peerHandler
 from src.server.dtServer import DtServer
 from src.server.peerHandler import Peer
-from src.server.announceSocket import AnnounceSocket
-from src.server.discoverSocket import DiscoverSocket
+from src.server.udpSocket import UDPSocket
 from src.util.utilis import genMsgDatos, is_minimum
 import threading
 
@@ -27,6 +25,7 @@ def check_disconnected_peers(server: DtServer):
     while True:
         time.sleep(2*SLEEP_TIME)
         for peer in server.peers.get_peers():
+            peer.acquire()
             current_time = datetime.now()
             time_diff = (current_time - peer.last_announce_time).total_seconds()
             if time_diff > 2*SLEEP_TIME:
@@ -35,10 +34,11 @@ def check_disconnected_peers(server: DtServer):
                 print("[DSCV] DISCONNECTED SOCKET", peer.ip, peer.datos_port)
             else:
                 print("no discone")
-        
-
+            peer.release()
+    return
+    
 # Thread recibe y establece nueva conexion
-def DISCOVER(server: DtServer, conn: DiscoverSocket):
+def DISCOVER(server: DtServer, conn: UDPSocket):
     disconnection_tracker = threading.Thread(target=check_disconnected_peers, args=(server,), daemon=True)
     disconnection_tracker.start()
 
@@ -50,9 +50,8 @@ def DISCOVER(server: DtServer, conn: DiscoverSocket):
             server.peers.acquire()
             if server.peers.exists(ip, port, lock=False):
                 server.peers.release()
-                peer = server.peers.get_peer(ip, port)
-                peer.last_announce_time = datetime.now()
-                server.peers.set_peer(peer.ip, peer.datos_port, peer) #Importante: Si el servidor lo desconecta en otro hilo esto lo vuelve a conectar (esta bien que lo haga, aunque algun print va a dar un mensaje confuso)
+                peer = server.peers.get_peer(ip, port) # Este es el peer solito
+                peer.update_time()
             else:
                 print(msg, ip)
                 # Si ya el primer elemento en esta lista de parseo es "None", es 
@@ -64,24 +63,30 @@ def DISCOVER(server: DtServer, conn: DiscoverSocket):
 
                     # Actualizar lista de server.
                     crc_server_nuevo = zlib.crc32(f'{ip}:{port}'.encode())
-                    nuevo_peer = Peer(ip, port, socket_datos, crc_server_nuevo)
-                    server.peers.set_peer(ip, int(port), nuevo_peer, lock = False)
-                    server.peers.release()
-                    print("[DSCV] Se ha conectado con el nuevo peer ", ip, port)
+                    # Avisar al servidor nuevo a que soporte DATOS
+                    socket_datos.send(f"SRV_CONN {hex(crc_server_nuevo)}\n")
+                    if (socket_datos.receive() == "OK\n"):
+                        nuevo_peer = Peer(ip, port, socket_datos, crc_server_nuevo)
+                        server.peers.set_peer(ip, int(port), nuevo_peer, lock = False)
+                        server.peers.release()
+                        print("[DSCV] Se ha conectado con el nuevo peer ", ip, port)
 
-                    # Calcular las keys a enviar al nuevo peer
-                    keys_enviar = recalculate_values(server, crc_server_nuevo)
-                    # Enviar y borrar de la base las keys anteriores
-                    try:
-                        keys_err = deliver_values(server, keys_enviar, nuevo_peer)
-                        print(("[DSCV] Se enviaron ", len(keys_enviar) - len(keys_err)), 
-                        " datos con exito a ", ip, port, ". Envios erroneos: ", len(keys_err))
-                    except RuntimeError as e:
-                        print("[DSCV_ERR] " + str(e))
+                        # Calcular las keys a enviar al nuevo peer
+                        keys_enviar = recalculate_values(server, crc_server_nuevo)
+                        # Enviar y borrar de la base las keys anteriores
+                        try:
+                            keys_err = deliver_values(server, keys_enviar, nuevo_peer)
+                            print(("[DSCV] Se enviaron ", len(keys_enviar) - len(keys_err)), 
+                            " datos con exito a ", ip, port, ". Envios erroneos: ", len(keys_err))
+                        except RuntimeError as e:
+                            print("[DSCV_ERR] " + str(e))
+                    else:
+                        socket_datos.close()
+                        print("[DSCV_ERR] No se ha podido conectar con peer ", ip, port)
     return
 
 # Thread envia
-def ANNOUNCE(server: DtServer, conn: AnnounceSocket):
+def ANNOUNCE(server: DtServer, conn: UDPSocket):
     msg = format_command_ANNOUNCE(server.datos_port)
     while True:
         #aviso que existo en broadcast cada 30 segundos
@@ -116,10 +121,7 @@ def deliver_values(server: DtServer, keys_to_deliver: set, new_server_peer: Peer
             req = genMsgDatos('SET', key, server.database.get(key))
             # Enviamos la key con su value al server nuevo, obtenemos respuesta
             resp = new_server_peer.get_data(req)
-            if (resp == "OK\n"):
-                # Dato enviado correctamente, se elimina de la database actual
-                server.database.delete(key)
-            else:
+            if (resp != "OK\n"):
                 # Ocurrio un error, no se envia el dato y se la deja en el server
                 keys_with_errors.add(key)
         except (TimeoutError, RuntimeError):

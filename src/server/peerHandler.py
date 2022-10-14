@@ -26,8 +26,19 @@ class Peer:
         with self.lock:
             self.socket.send(message)
             data = self.socket.receive()
-        return data 
-    
+        return data
+
+    def update_time(self):
+        with self.lock:
+            self.last_announce_time = datetime.now()
+        return
+
+    def acquire(self):
+        self.lock.acquire()
+
+    def release(self):
+        self.lock.release()
+
     ################################
     # DE USO EXCLUSIVO PARA PRUEBAS
     ################################
@@ -51,11 +62,6 @@ class PeerHandler:
         with self.lock:
             keys = list(self.peers.keys())
         return keys
-
-    def get_peer_by_key_format(self, key_format):
-        with self.lock:
-            value = self.peers[key_format]
-        return value
 
     def get_peer(self, addr, port):
         with self.lock:
@@ -90,6 +96,18 @@ class PeerHandler:
         return exists_peer
 
     # Funciones auxiliares #
+
+    def addr_is_peer(self, ip, port, lock = True) -> bool:
+        res = False
+        if lock:
+            self.lock.acquire()
+            for peer in self.peers.values():
+                if (peer.socket.sock.gethostname() == (ip, port)):
+                    res = True
+                    break
+        if lock:
+            self.lock.release()
+        return res
 
     def show_peers(self):
         with self.lock:

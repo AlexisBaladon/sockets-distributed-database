@@ -14,8 +14,7 @@ from src.client.clientSocket import ClientSocket, getLocalhost
 from src.exceptions.argumentError import ArgumentError
 from src.server.dtServer import DtServer
 from src.server.descubrimiento import DISCOVER, ANNOUNCE
-from src.server.announceSocket import AnnounceSocket
-from src.server.discoverSocket import DiscoverSocket
+from src.server.udpSocket import UDPSocket
 from src.util.utilis import checkIp, checkPort
 
 # Definicion de Constantes #
@@ -51,43 +50,63 @@ def handle_args(argv):
 
 def handle_discover(server: DtServer, conn):
     print(f"[SERVER] DISCOVER PROTOCOL ON")
-    try:
-        DISCOVER(server, conn)
-    except Exception as e:
-        print(f"[SERV_ERR] {str(e)}")
-        traceback.print_exc()
+    while True:
+        try:
+            DISCOVER(server, conn)
+        except Exception as e:
+            print(f"[SERV_ERR] {str(e)}")
+            traceback.print_exc()
     conn.close()
+    return
 
 def handle_announce(server: DtServer, conn):
     print(f"[SERVER] ANNOUNCE PROTOCOL ON")
-    try:
-        ANNOUNCE(server, conn)
-    except Exception as e:
-        print(f"[SERV_ERR] {str(e)}")
-        traceback.print_exc()
+    while(True):
+        try:
+            ANNOUNCE(server, conn)
+        except Exception as e:
+            print(f"[SERV_ERR] {str(e)}")
+            traceback.print_exc()
     conn.close()
+    return
 
-def handle_client(server: DtServer, conn: ClientSocket, addr_c: str):
+def check_token(server_crc: str, msg: str) -> bool:
+    return msg == f"SRV_CONN {server_crc}\n"
+
+def handle_client(server: DtServer, conn: ClientSocket, flag_not_server = True):
     response = "NO\n"
     try:
         msg = conn.receive()
-        response = server.processRequest(msg)
+        is_server = check_token(hex(server.firma), msg)
+        if (is_server):
+            conn.send("OK\n")
+            handle_peer_server(server, conn)
+        else:
+            response = server.processRequest(msg)
         print(response)
     except Exception as e:
         print(f"[SERV_ERR] {str(e)}")
         traceback.print_exc()
     conn.send(response)
-    conn.close()
+    if  flag_not_server:
+        conn.close()
     return None
+
+def handle_peer_server(server: DtServer, conn: ClientSocket):
+    while True:
+        handle_client(server, conn, False)
+    return
 
 def handle_datos(server: DtServer, conn: ClientSocket):
     conn.bind(server.ip, server.datos_port)
     conn.listen()
     while True:
         conn_c, addr_c = conn.accept()
-        print(f"[NUEVA_CONEXION] {addr_c} conectado.")
-        thread_client = threading.Thread(target=handle_client, args=(server, ClientSocket(conn_c), addr_c), daemon=True)
+        (ip, port) = conn_c.getpeername()
+        print(f"[NUEVA_CONEXION] {ip}:{port} conectado.")
+        thread_client = threading.Thread(target=handle_client, args=(server, ClientSocket(conn_c)), daemon=True)
         thread_client.start()
+    return
 
 # Funcion principal #
 
@@ -103,8 +122,8 @@ def main(args):
 
     # Inicializacion del server #
     server = DtServer(ip, datos_port, announce_port, discover_port) 
-    announce_udp_socket = AnnounceSocket(server.announce_port) # Crear announce socket
-    discover_udp_socket = DiscoverSocket(server.descubrimiento_port) # Crear discover socket
+    announce_udp_socket = UDPSocket(server.announce_port) # Crear announce socket
+    discover_udp_socket = UDPSocket(server.descubrimiento_port) # Crear discover socket
     datos_tcp_socket = ClientSocket() # Crear client socket
     thread_announce = threading.Thread(target=handle_announce, args=(server, announce_udp_socket), daemon=True)
     thread_discover = threading.Thread(target=handle_discover, args=(server, discover_udp_socket), daemon=True)
@@ -114,8 +133,13 @@ def main(args):
     thread_datos.start()
     print(f"[SERVER] Servidor atendiendo DATOS en {ip}:{datos_port}")
     while True:
+        command = input()
+        if (command == "database get all"):
+            print(server.database.get_all())
+        else:
+            print("[CMND] Comando no es correcto")
         continue
-    
+    return
 
 # Main Init #
 if __name__ == "__main__":
