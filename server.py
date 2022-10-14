@@ -9,7 +9,7 @@
 ## Modulo Principal de Server (server.py) ##
 
 # Definicion de Imports #
-import getopt, socket, sys, threading, traceback
+import getopt, socket, sys, threading, traceback, os
 from src.client.clientSocket import ClientSocket, getLocalhost
 from src.exceptions.argumentError import ArgumentError
 from src.server.dtServer import DtServer
@@ -31,6 +31,19 @@ HELP = [("client.py [options] | <ServerIP> <ServerDatosPort> "
     "  ServerDiscoverPort: Puerto del servidor de DESCUBRIMIENTO\n"
     "Options:\n  -h:    Imprime el texto de ayuda")]
 
+HELP_COMMANDS = [("[HELP]\n"
+    "  active threads:  Muestra la cantidad de Threads activos\n"
+    "  clear:           Limpia la consola\n"
+    "  exit:            Termina el proceso de server\n"
+    "  get database:    Retorna el contenido de la base de datos\n"
+    "  get peers:       Retorna los peers descubiertos\n"
+    "  get server info: Retorna la informacion del server\n"
+    "  help:            Obtiene ayuda")]
+
+# Agregar comandos en orden alfabetico ascendente
+COMMANDS = ["active threads", "clear", "get database", "get peers", 
+    "get server info", "help"]
+
 # Definicion de Funciones #
 
 def handle_args(argv):
@@ -47,6 +60,24 @@ def handle_args(argv):
     announce_port = checkPort(args[2]) if len(args) > 2 else DEFAULT_ANNOUNCE_PORT
     discover_port = checkPort(args[3]) if len(args) > 3 else DEFAULT_DISCOVER_PORT
     return addr, datos_port, announce_port, discover_port
+
+def handle_commands(server: DtServer, command: int):
+    COMMANDS_FUNC = [
+        lambda: print("[SERVER] Cantidad de threads activos: ", threading.active_count()),
+        lambda: os.system('cls||clear'),
+        lambda: print("[DATABASE] ", server.database.get_all()),
+        lambda: print("[PEERS] ", server.peers.get_peers_keys()),
+        lambda: print(f"""[SERVER]*Direccion IP: {server.ip}
+        *Puerto DATOS: {server.datos_port}
+        *Puerto ANNOUNCE: {server.announce_port}
+        *Puerto DESCUBRIMIENTO: {server.descubrimiento_port}
+        *Firma CRC32: {hex(server.firma)}"""),
+        lambda: print(HELP_COMMANDS[0])]
+    if (command >= 0 and command < 6):
+        COMMANDS_FUNC[command]()
+    else:
+        raise ValueError("Comando invalido")
+    return
 
 def handle_discover(server: DtServer, conn):
     print(f"[SERVER] DISCOVER PROTOCOL ON")
@@ -134,11 +165,12 @@ def main(args):
     print(f"[SERVER] Servidor atendiendo DATOS en {ip}:{datos_port}")
     while True:
         command = input()
-        if (command == "database get all"):
-            print(server.database.get_all())
-        else:
-            print("[CMND] Comando no es correcto")
-        continue
+        try:
+            handle_commands(server, COMMANDS.index(command))
+        except ValueError:
+            if (command == "exit"):
+                raise KeyboardInterrupt("Exit")
+            print("[CMND] El comando no es correcto, ingrese 'help' para obtener ayuda")
     return
 
 # Main Init #
