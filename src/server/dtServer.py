@@ -35,13 +35,11 @@ class DtServer:
     def determine_designated_server(self, key_crc: int):
         min_distance = abs(self.firma - key_crc)
         (min_ip, min_port) = (self.ip, self.datos_port)
-        peers = self.peers.get_peers_keys()
-        for peer_key in peers:
-            peer = self.peers.get_peer_by_key_format(peer_key)
+        for peer in self.peers.get_peers():
             peer_distance = abs(peer.crc - key_crc)
             if peer_distance < min_distance:
                 min_distance = peer_distance
-                (min_ip, min_port) = peer.ip, peer.port
+                (min_ip, min_port) = peer.ip, peer.datos_port
         return min_ip, min_port
     
     # Procesa la request obteniendo una respuesta acorde al protocolo DATOS
