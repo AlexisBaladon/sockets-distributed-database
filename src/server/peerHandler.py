@@ -39,14 +39,6 @@ class Peer:
     def release(self):
         self.lock.release()
 
-    ################################
-    # DE USO EXCLUSIVO PARA PRUEBAS
-    ################################
-    def show(self):
-        print(self.server_IP + '   ' + self.server_port + '   ' + str(self.crc))
-        return
-    #################################
-
 # Definicion clase PeerHandler #
 class PeerHandler:
     def __init__(self, peers: dict = {}):
@@ -108,11 +100,6 @@ class PeerHandler:
         if lock:
             self.lock.release()
         return res
-
-    def show_peers(self):
-        with self.lock:
-            for p in self.peers:
-                print(p)
     
     def __format_key(self, addr, port) -> str:
         return f'{addr}:{port}'

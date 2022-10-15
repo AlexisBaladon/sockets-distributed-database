@@ -9,7 +9,7 @@
 ## Modulo Principal de Server (server.py) ##
 
 # Definicion de Imports #
-import getopt, socket, sys, threading, traceback, os
+import getopt, socket, sys, threading, os
 from src.client.clientSocket import ClientSocket, getLocalhost
 from src.exceptions.argumentError import ArgumentError
 from src.server.dtServer import DtServer
@@ -41,7 +41,7 @@ HELP_COMMANDS = [("[HELP]\n"
     "  help:            Obtiene ayuda")]
 
 # Agregar comandos en orden alfabetico ascendente
-COMMANDS = ["active threads", "clear", "get database", "get peers", 
+COMMANDS = ["active threads", "clear", "get clients","get database", "get peers", 
     "get server info", "help"]
 
 # Definicion de Funciones #
@@ -65,6 +65,7 @@ def handle_commands(server: DtServer, command: int):
     COMMANDS_FUNC = [
         lambda: print("[SERVER] Cantidad de threads activos: ", threading.active_count()),
         lambda: os.system('cls||clear'),
+        lambda: print('[CLIENTS] Cantidad de clientes con conexiones activas: ', threading.active_count() - 5),
         lambda: print("[DATABASE] ", server.database.get_all()),
         lambda: print("[PEERS] ", server.peers.get_peers_keys()),
         lambda: print(f"""[SERVER]*Direccion IP: {server.ip}
@@ -86,7 +87,6 @@ def handle_discover(server: DtServer, conn):
             DISCOVER(server, conn)
         except Exception as e:
             print(f"[SERV_ERR] {str(e)}")
-            traceback.print_exc()
     conn.close()
     return
 
@@ -97,35 +97,22 @@ def handle_announce(server: DtServer, conn):
             ANNOUNCE(server, conn)
         except Exception as e:
             print(f"[SERV_ERR] {str(e)}")
-            traceback.print_exc()
     conn.close()
     return
 
 def check_token(server_crc: str, msg: str) -> bool:
     return msg == f"SRV_CONN {server_crc}\n"
 
-def handle_client(server: DtServer, conn: ClientSocket, flag_not_server = True):
-    response = "NO\n"
-    try:
-        msg = conn.receive()
-        is_server = check_token(hex(server.firma), msg)
-        if (is_server):
-            conn.send("OK\n")
-            handle_peer_server(server, conn)
-        else:
-            response = server.processRequest(msg)
-        print(response)
-    except Exception as e:
-        print(f"[SERV_ERR] {str(e)}")
-        traceback.print_exc()
-    conn.send(response)
-    if  flag_not_server:
-        conn.close()
-    return None
-
-def handle_peer_server(server: DtServer, conn: ClientSocket):
+def handle_client(server: DtServer, conn: ClientSocket):
     while True:
-        handle_client(server, conn, False)
+        response = "NO\n"
+        try:
+            msg = conn.receive()
+            response = server.processRequest(msg)
+            conn.send(response)
+        except Exception:
+            print('[CLIENTS] Un cliente se ha desconectado')
+            break
     return
 
 def handle_datos(server: DtServer, conn: ClientSocket):

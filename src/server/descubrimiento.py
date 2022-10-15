@@ -17,10 +17,11 @@ from src.util.utilis import genMsgDatos, is_minimum
 import threading
 
 # Definicion de Constantes #
-SLEEP_TIME = 5 # Tiempo de espera para enviar mensaje de broadcast ANNOUNCE
+SLEEP_TIME = 30 # Tiempo de espera para enviar mensaje de broadcast ANNOUNCE
 SIZE = 1024 # Tamanio del buffer del mensaje
 FORMAT = 'utf-8' # Formato del mensaje
 
+# Elimina los peers que no se hayan anunciado en un tiempo de SLEEP_TIME*2
 def check_disconnected_peers(server: DtServer):
     while True:
         time.sleep(2*SLEEP_TIME)
@@ -32,8 +33,6 @@ def check_disconnected_peers(server: DtServer):
                 server.peers.delete_peer(peer.ip, peer.datos_port)
                 peer.socket.close()
                 print("[DSCV] DISCONNECTED SOCKET", peer.ip, peer.datos_port)
-            else:
-                print("no discone")
             peer.release()
     return
     
@@ -53,7 +52,6 @@ def DISCOVER(server: DtServer, conn: UDPSocket):
                 peer = server.peers.get_peer(ip, port) # Este es el peer solito
                 peer.update_time()
             else:
-                print(msg, ip)
                 # Si ya el primer elemento en esta lista de parseo es "None", es 
                 # porque el mensaje recibido tiene el formato correcto.
                 if method is not None:                
@@ -64,24 +62,19 @@ def DISCOVER(server: DtServer, conn: UDPSocket):
                     # Actualizar lista de server.
                     crc_server_nuevo = zlib.crc32(f'{ip}:{port}'.encode())
                     # Avisar al servidor nuevo a que soporte DATOS
-                    socket_datos.send(f"SRV_CONN {hex(crc_server_nuevo)}\n")
-                    if (socket_datos.receive() == "OK\n"):
-                        nuevo_peer = Peer(ip, port, socket_datos, crc_server_nuevo)
-                        server.peers.set_peer(ip, int(port), nuevo_peer, lock = False)
-                        server.peers.release()
-                        print("[DSCV] Se ha conectado con el nuevo peer ", ip, port)
+                    nuevo_peer = Peer(ip, port, socket_datos, crc_server_nuevo)
+                    server.peers.set_peer(ip, int(port), nuevo_peer, lock = False)
+                    server.peers.release()
+                    print("[DSCV] Se ha conectado con el nuevo peer ", ip, port)
 
-                        # Calcular las keys a enviar al nuevo peer
-                        keys_enviar = recalculate_values(server, crc_server_nuevo)
-                        # Enviar y borrar de la base las keys anteriores
-                        try:
-                            keys_err = deliver_values(server, keys_enviar, nuevo_peer)
-                            print(("[DSCV] Se enviaron ", len(keys_enviar) - len(keys_err)), 
-                            " datos con exito a ", ip, port, ". Envios erroneos: ", len(keys_err))
-                        except RuntimeError as e:
-                            print("[DSCV_ERR] " + str(e))
-                    else:
-                        socket_datos.close()
+                    # Calcular las keys a enviar al nuevo peer
+                    keys_enviar = recalculate_values(server, crc_server_nuevo)
+                    # Enviar y borrar de la base las keys anteriores
+                    try:
+                        keys_err = deliver_values(server, keys_enviar, nuevo_peer)
+                        print("[DSCV] Se enviaron ", len(keys_enviar) - len(keys_err), 
+                        " datos con exito a ", ip, port, ". Envios erroneos: ", len(keys_err))
+                    except RuntimeError:
                         print("[DSCV_ERR] No se ha podido conectar con peer ", ip, port)
     return
 
@@ -94,12 +87,7 @@ def ANNOUNCE(server: DtServer, conn: UDPSocket):
         time.sleep(SLEEP_TIME)
     return
 
-# NOTA DE MIGUE, FAVOR LEER:
-# Este es el nuevo recalculate_values que hice:
-# Si se llama a esta funcion es porque se descubrio un solo servidor nuevo.
-# Por lo tanto, solo es necesario comparar la distancia del CRC32 de las keys
-# con el server nuevo, si este es menor a la distancia con el server actual
-# recien ahi se mandan las claves (NO SE RECALCULA NADA! LOS VALORES CRC SON CONSTANTES!)
+# Retorna un set que contiene los valores a enviar al servidor nuevo
 def recalculate_values(server: DtServer, crc_new_server: int) -> set:
     claves_a_enviar = set()
     claves_actuales = server.database.get_all()
