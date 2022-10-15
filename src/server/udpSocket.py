@@ -31,9 +31,6 @@ class UDPSocket:
         if (len(data) == 0):
             raise RuntimeError("Empty message sent")
         sent = self.sock.sendto(data, (BROADCAST, descubrimiento_port))
-        sent = self.sock.sendto(data, (BROADCAST, 2027)) #aca va puerto de discover
-        sent = self.sock.sendto(data, (BROADCAST, 2037)) #agregar mas de ser necesario
-        sent = self.sock.sendto(data, (BROADCAST, 2047))
         if (sent == 0):
             raise RuntimeError("Socket connection broken")
 

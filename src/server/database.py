@@ -33,18 +33,8 @@ class Database:
             del self.database[key]
         return
     
-    ##################################
-    # Nueva (By Mathias)
-    ##################################
+    # Retorna un set con todos los datos de la base de datos
     def get_all(self):
         with self.lock:
-            values = self.database.copy() #No queremos referenciasss. No entiendo tampoco por que es necesario esto (hablar)
+            values = self.database.copy()
         return values
-    
-    ##################################
-    # De uso exclusivo para pruebas
-    ##################################
-    def show(self):
-        for i in self.database:
-            print(i + '   ' + self.get(i))
-        return

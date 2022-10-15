@@ -71,25 +71,23 @@ class ClientSocket:
                 raise TimeoutError("Tiempo de conexion excedido")
             msg = self.sock.recv(SIZE)
             data += msg.decode(FORMAT)
-        print (data)
         return data
 
     # Finalizar conexion con el socket remoto
     def close(self):
         self.sock.close()
 
+    # Envia el mensaje 'msg' al socket remoto en addr:port siguiendo el 
+    #   Protocolo DATOS
+    # Mantiene persistente la conexion y retorna la respuesta por parte del servidor.
+    def send_msg_datos(self, msg: str) -> str:
+        #client = ClientSocket() # Obtener el socket
+        #client.connect(addr, port) # Establecer conexion
+        self.send(msg) # Enviar mensaje (DATOS)
+        data = self.receive() # Recibir respuesta
+        return data
+
 # Obtener localhost
 def getLocalhost():
     return socket.gethostbyname(socket.gethostname())
 
-# Envia el mensaje 'msg' al socket remoto en addr:port siguiendo el 
-#   Protocolo DATOS
-# Finaliza la conexion y retorna la respuesta por parte del servidor.
-def sendMsgDatos(addr: str, port: int, msg: str) -> str:
-    data = ''
-    client = ClientSocket() # Obtener el socket
-    client.connect(addr, port) # Establecer conexion
-    client.send(msg) # Enviar mensaje (DATOS)
-    data = client.receive() # Recibir respuesta
-    client.close() # Finalizar conexion
-    return data
