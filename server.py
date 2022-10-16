@@ -86,7 +86,6 @@ def handle_commands(server: DtServer, command: int):
     return
 
 def handle_discover(server: DtServer, conn):
-    print(f"[SERVER] DISCOVER PROTOCOL ON")
     while True:
         try:
             DISCOVER(server, conn)
@@ -96,7 +95,6 @@ def handle_discover(server: DtServer, conn):
     return
 
 def handle_announce(server: DtServer, conn):
-    print(f"[SERVER] ANNOUNCE PROTOCOL ON")
     while(True):
         try:
             ANNOUNCE(server, conn)
@@ -158,6 +156,8 @@ def main(args):
     thread_discover.start()
     thread_datos.start()
     print(f"[SERVER] Servidor atendiendo DATOS en {ip}:{datos_port}")
+    print(f"[SERVER] Servidor atendiendo ANNOUNCE en {ip}:{announce_port}")
+    print(f"[SERVER] Servidor atendiendo DISCOVER en {ip}:{discover_port}")
     while True:
         command = input()
         try:
