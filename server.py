@@ -12,6 +12,7 @@
 import getopt, socket, sys, threading, os
 from src.client.clientSocket import ClientSocket, getLocalhost
 from src.exceptions.argumentError import ArgumentError
+from src.exceptions.clientError import ClientError
 from src.server.dtServer import DtServer
 from src.server.descubrimiento import DISCOVER, ANNOUNCE
 from src.server.udpSocket import UDPSocket
@@ -110,8 +111,10 @@ def handle_client(server: DtServer, conn: ClientSocket):
             msg = conn.receive()
             response = server.processRequest(msg)
             conn.send(response)
+        except ClientError as e:
+            print("[CLIENTS] ", str(e))
         except Exception:
-            print('[CLIENTS] Un cliente se ha desconectado')
+            print('[CLIENTS] Se ha roto la conexion con un cliente')
             break
     return
 

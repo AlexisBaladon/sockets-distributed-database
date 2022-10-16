@@ -9,6 +9,7 @@
 # Definicion de Imports #
 import socket
 from datetime import datetime
+from src.exceptions.clientError import ClientError
 
 # Definicion de Constantes #
 SIZE = 1024 # Tamanio del buffer del mensaje
@@ -56,10 +57,10 @@ class ClientSocket:
     def send(self, msg):
         data = msg.encode(FORMAT)
         if (len(data) == 0):
-            raise RuntimeError("Empty message sent")
+            raise ClientError("El mensaje a enviar es vacio")
         sent = self.sock.sendall(data)
-        if (sent == 0):
-            raise RuntimeError("Socket connection broken")
+        if (sent != None):
+            raise ClientError("Ha ocurrido un error al enviar el mensaje")
             
     # Precondicion: se debe estar conectado con el socket remoto
     def receive(self) -> str:
