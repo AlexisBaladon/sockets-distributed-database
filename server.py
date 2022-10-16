@@ -19,9 +19,9 @@ from src.server.udpSocket import UDPSocket
 from src.util.utilis import checkIp, checkPort
 
 # Definicion de Constantes #
-DEFAULT_DATOS_PORT = 32000
-DEFAULT_ANNOUNCE_PORT = 32001
-DEFAULT_DISCOVER_PORT = 32002
+DEFAULT_DATOS_PORT = 2022
+DEFAULT_ANNOUNCE_PORT = 2023
+DEFAULT_DISCOVER_PORT = 2024
 SERVER = socket.gethostbyname(socket.gethostname())
 
 HELP = [("client.py [options] | <ServerIP> <ServerDatosPort> "
@@ -36,7 +36,8 @@ HELP_COMMANDS = [("[HELP]\n"
     "  active threads:  Muestra la cantidad de Threads activos\n"
     "  clear:           Limpia la consola\n"
     "  exit:            Termina el proceso de server\n"
-    "  get database:    Retorna el contenido de la base de datos\n"
+    "  get clients:     Retorna la cantidad de clientes actualmente conectados\n"
+    "  get database:    Retorna las keys de la base de datos\n"
     "  get peers:       Retorna los peers descubiertos\n"
     "  get server info: Retorna la informacion del server\n"
     "  help:            Obtiene ayuda")]
@@ -58,8 +59,11 @@ def handle_args(argv):
         raise ArgumentError("[ATENCION] Argumentos faltantes")
     addr = checkIp(args[0]) if args[0] != 'localhost' else getLocalhost()
     datos_port = checkPort(args[1]) if args[1] != 'default' else DEFAULT_DATOS_PORT
-    announce_port = checkPort(args[2]) if len(args) > 2 else DEFAULT_ANNOUNCE_PORT
-    discover_port = checkPort(args[3]) if len(args) > 3 else DEFAULT_DISCOVER_PORT
+    announce_port = checkPort(args[2]) if ((len(args) > 2) and 
+        (checkPort(args[2]) != datos_port)) else DEFAULT_ANNOUNCE_PORT
+    discover_port = checkPort(args[3]) if ((len(args) > 3) and 
+        ((checkPort(args[3]) != datos_port) and 
+        (checkPort(args[3]) != announce_port))) else DEFAULT_DISCOVER_PORT
     return addr, datos_port, announce_port, discover_port
 
 def handle_commands(server: DtServer, command: int):
@@ -67,7 +71,7 @@ def handle_commands(server: DtServer, command: int):
         lambda: print("[SERVER] Cantidad de threads activos: ", threading.active_count()),
         lambda: os.system('cls||clear'),
         lambda: print('[CLIENTS] Cantidad de clientes con conexiones activas: ', threading.active_count() - 5),
-        lambda: print("[DATABASE] ", server.database.get_all()),
+        lambda: print("[DATABASE] ", server.database.get_keys()),
         lambda: print("[PEERS] ", server.peers.get_peers_keys()),
         lambda: print(f"""[SERVER]*Direccion IP: {server.ip}
         *Puerto DATOS: {server.datos_port}
@@ -114,7 +118,8 @@ def handle_client(server: DtServer, conn: ClientSocket):
         except ClientError as e:
             print("[CLIENTS] ", str(e))
         except Exception:
-            print('[CLIENTS] Se ha roto la conexion con un cliente')
+            # Se ha roto la conexion con un cliente y termina el thread
+            conn.close()
             break
     return
 
