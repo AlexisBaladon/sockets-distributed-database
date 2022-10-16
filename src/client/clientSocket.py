@@ -57,7 +57,7 @@ class ClientSocket:
         data = msg.encode(FORMAT)
         if (len(data) == 0):
             raise RuntimeError("Empty message sent")
-        sent = self.sock.send(data)
+        sent = self.sock.sendall(data)
         if (sent == 0):
             raise RuntimeError("Socket connection broken")
             

@@ -13,7 +13,7 @@ from src.client.clientSocket import ClientSocket
 from src.server.dtServer import DtServer
 from src.server.peerHandler import Peer
 from src.server.udpSocket import UDPSocket
-from src.util.utilis import genMsgDatos, is_minimum
+from src.util.utilis import checkIp, checkPort, genMsgDatos, is_minimum
 import threading
 
 # Definicion de Constantes #
@@ -45,6 +45,13 @@ def DISCOVER(server: DtServer, conn: UDPSocket):
         (msg, ip) = conn.receive() #TODO: FALTA UN TIMEOUT EN ESTE SOCKET
         # Parsea el mensaje 'ANNOUNCE <port>', devolviendo la lista ['ANNOUNCE', <port>], o None, None.
         (method, port) = parse_command_ANNOUNCE(msg)
+        try:
+            ip = checkIp(ip)
+            port = checkPort(port)
+        except ValueError:
+            # Si la direccion (ip, puerto) es un valor no es correcta
+            # pasa a la siguiente iteracion del while
+            continue
         if (ip != server.ip or int(port) != server.datos_port):
             server.peers.acquire()
             if server.peers.exists(ip, port, lock=False):
