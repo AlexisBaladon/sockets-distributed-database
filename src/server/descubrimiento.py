@@ -13,7 +13,7 @@ from src.client.clientSocket import ClientSocket
 from src.server.dtServer import DtServer
 from src.server.peerHandler import Peer
 from src.server.udpSocket import UDPSocket
-from src.util.utilis import genMsgDatos, is_minimum
+from src.util.utilis import checkIp, checkPort, genMsgDatos, is_minimum
 import threading
 
 # Definicion de Constantes #
@@ -45,6 +45,13 @@ def DISCOVER(server: DtServer, conn: UDPSocket):
         (msg, ip) = conn.receive() #TODO: FALTA UN TIMEOUT EN ESTE SOCKET
         # Parsea el mensaje 'ANNOUNCE <port>', devolviendo la lista ['ANNOUNCE', <port>], o None, None.
         (method, port) = parse_command_ANNOUNCE(msg)
+        try:
+            ip = checkIp(ip)
+            port = checkPort(port)
+        except ValueError:
+            # Si la direccion (ip, puerto) es un valor no es correcta
+            # pasa a la siguiente iteracion del while
+            continue
         if (ip != server.ip or int(port) != server.datos_port):
             server.peers.acquire()
             if server.peers.exists(ip, port, lock=False):
@@ -56,9 +63,16 @@ def DISCOVER(server: DtServer, conn: UDPSocket):
                 # porque el mensaje recibido tiene el formato correcto.
                 if method is not None:                
                     # Abre una conexión TCP al puerto dado para soportar DATOS.
-                    socket_datos = ClientSocket()
-                    socket_datos.connect(ip, int(port))
-
+                    try:
+                        socket_datos = ClientSocket()
+                        socket_datos.connect(ip, int(port))
+                    except Exception as e:
+                        # Si ocurre una excepcion en la conexion se libera
+                        # el lock, se cierra el socket y se continua la siguiente iteracion
+                        server.peers.release()
+                        socket_datos.close()
+                        print(f"[DSCV_ERR] {str(e)}")
+                        continue
                     # Actualizar lista de server.
                     crc_server_nuevo = zlib.crc32(f'{ip}:{port}'.encode())
                     # Avisar al servidor nuevo a que soporte DATOS
@@ -82,9 +96,12 @@ def DISCOVER(server: DtServer, conn: UDPSocket):
 def ANNOUNCE(server: DtServer, conn: UDPSocket):
     msg = format_command_ANNOUNCE(server.datos_port)
     while True:
-        #aviso que existo en broadcast cada 30 segundos
-        conn.send(msg, server.descubrimiento_port)
-        time.sleep(SLEEP_TIME)
+        try:
+            #aviso que existo en broadcast cada 30 segundos
+            conn.send(msg, server.descubrimiento_port)
+            time.sleep(SLEEP_TIME)
+        except Exception as e:
+            print(f"[ANN_ERR] {str(e)}")
     return
 
 # Retorna un set que contiene los valores a enviar al servidor nuevo

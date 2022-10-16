@@ -11,8 +11,8 @@
 # Definicion de Imports #
 import os # Utilizado para limpiar la consola
 import client
-from src.client.clientSocket import getLocalhost
-from src.util.utilis import checkIp, checkPort, genMsgDatos 
+from src.client.clientSocket import ClientSocket, getLocalhost
+from src.util.utilis import checkIp, checkPort 
 
 # Definicion de Constantes #
 METHODS = ['GET', 'SET', 'DEL']
@@ -121,12 +121,7 @@ def inputMethodAuto(method: str) -> str:
                 break
             else:
                 print('[ATENCION] Por favor, ingrese un valor valido\n')
-    msg = ''
-    try:
-        msg = genMsgDatos(method, key, value)
-    except Exception as e:
-        print('[ATENCION] ' + str(e))
-    return msg
+    return (method, key, value)
 
 def manualInput():
     print('Ingrese un comando manual para el Protocolo Datos, siga el siguiente formato:\n',
@@ -153,10 +148,19 @@ def main():
                     help()
                 else:
                     (addr, port) = inputAddr()
+                    sock = ClientSocket()
+                    sock.connect(addr, port)
                     msg = inputMethodAuto(METHODS[opt - 1])
-                    client.connDatos(addr, port, msg)
+                    client.send_recv_data(sock, addr, port, msg)
+                    sock.close()
                 input("Presione ENTER para volver al menu principal... ")
                 cliClear()
+        except KeyboardInterrupt:
+            print('Finalizando...')
+            break
+        except ConnectionRefusedError:
+            cliClear()
+            print("[ATENCION] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión")
         except ValueError:
             cliClear()
             print('[ATENCION] El valor ingresado no es valido\n')

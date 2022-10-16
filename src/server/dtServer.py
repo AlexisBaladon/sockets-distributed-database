@@ -67,10 +67,9 @@ class DtServer:
                 print(f"[DATABASE] Elemento {key} no encontrado")
                 response = formatResponse(None, None)
         else:
-            peer = self.peers.get_peer(ip, port)
-            #try:
-            response = peer.get_data(request)
-            #except Exception as e:
-            #    print("Attempt to communicate with disconnected socket. Disconnecting")
-            #    self.peers.delete_peer(ip, port)
+            try:
+                peer = self.peers.get_peer(ip, port)
+                response = peer.get_data(request)
+            except Exception:
+                print(f'[PEERS] No se ha podido comunicar con el peer {ip}:{port}')
         return response

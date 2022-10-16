@@ -32,7 +32,7 @@ EXIT = ["cerrar", "exit", "quit", "salir"]
 # Envia y recibe datos entre el cliente y el servidor utilizando el socket TCP
 #   'sock'. Luego, imprime los datos obtenidos.
 # Precondicion: 'sock' debe estar inicializado.
-def send_recv_data(sock: ClientSocket, ip: str, port: str, msg: str):
+def send_recv_data(sock: ClientSocket, ip: str, port: str, msg):
     try:
         msg = genMsgDatos(msg[0], msg[1], msg[2])
         if (parseCommand(msg)[0] == None):
@@ -122,4 +122,7 @@ def main(argv):
 
 # Main Init #
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    try:
+        main(sys.argv[1:])
+    except KeyboardInterrupt:
+        pass

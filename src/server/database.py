@@ -33,6 +33,11 @@ class Database:
             del self.database[key]
         return
     
+    def get_keys(self):
+        with self.lock:
+            keys = self.database.keys()
+        return keys
+
     # Retorna un set con todos los datos de la base de datos
     def get_all(self):
         with self.lock:
