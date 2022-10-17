@@ -172,7 +172,7 @@ def main(args):
         # Cerrar todos los sockets
         announce_udp_socket.sock.close()
         discover_udp_socket.sock.close()
-        datos_tcp_socket.close()
+        datos_tcp_socket.sock.close()
         server.peers.shutdown_peer_sockets()
     return
 
