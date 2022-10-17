@@ -59,7 +59,7 @@ def DISCOVER(server: DtServer, conn: UDPSocket):
             server.peers.acquire()
             if server.peers.exists(ip, port, lock=False):
                 server.peers.release()
-                peer = server.peers.get_peer(ip, port) # Este es el peer solito
+                peer = server.peers.get_peer(ip, port)
                 peer.update_time()
             else:
                 # Si ya el primer elemento en esta lista de parseo es "None", es 
