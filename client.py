@@ -10,7 +10,7 @@
 
 # Definicion de Imports #
 import sys, getopt
-from src.client.clientSocket import ClientSocket, getLocalhost
+from src.client.clientSocket import ClientSocket
 from src.exceptions.keyError import KeyError
 from src.exceptions.methodError import MethodError
 from src.util.utilis import checkIp, checkPort, genMsgDatos, parseCommand
@@ -53,37 +53,41 @@ def send_recv_data(sock: ClientSocket, ip: str, port: str, msg):
 # - Host:Port tienen un formato valido, es decir: xxx.xxx.xxx.xxx:yyyy
 # - Msg es un mensaje valido para el Protocolo DATOS
 def client_datos(ip: str, port: int, persist: bool, msg):
-    sock = ClientSocket() # Crea el socket TCP
-    sock.connect(ip, port)
-    print(f'Conectando con servidor {ip}:{port}')
-    while True:
-        try:
-            send_recv_data(sock, ip, port, msg)
-        except TimeoutError as te:
-            print('[TIMEOUT_ERR] ' + str(te))
-            break
-        except InterruptedError as ie:
-            print('[INTERRUPTED_ERR] ' + str(ie))
-            break
-        except IndexError:
-            print("[ATENCION] Comando no reconocido")
-        except Exception as e:
-            print('[ERR] ' + str(e))
-            break
-        # Terminar el loop y cerrar el socket si no se persiste mas la conexion
-        if not persist:
-            break
-        user_input = input("\n")
-        if (user_input.lower() in EXIT):
-            break
-        try:
-            msg = user_input.split()[0:3]
-            if (len(msg) > 1 and len(msg) < 4):
-                if (len(msg) < 3):
-                    msg.append('')
-        except IndexError:
-            print("[ATENCION] Comando no reconocido")
-    sock.close()
+    try:
+        sock = ClientSocket() # Crea el socket TCP
+        sock.connect(ip, port)
+        print(f'Conectando con servidor {ip}:{port}')
+        while True:
+            try:
+                send_recv_data(sock, ip, port, msg)
+            except TimeoutError as te:
+                print('[TIMEOUT_ERR] ' + str(te))
+                break
+            except InterruptedError as ie:
+                print('[INTERRUPTED_ERR] ' + str(ie))
+                break
+            except IndexError:
+                print("[ATENCION] Comando no reconocido")
+            except Exception as e:
+                print('[ERR] ' + str(e))
+                break
+            # Terminar el loop y cerrar el socket si no se persiste mas la conexion
+            if not persist:
+                break
+            user_input = input("\n")
+            if (user_input.lower() in EXIT):
+                break
+            try:
+                msg = user_input.split()[0:3]
+                if (len(msg) > 1 and len(msg) < 4):
+                    if (len(msg) < 3):
+                        msg.append('')
+            except IndexError:
+                print("[ATENCION] Comando no reconocido")
+        sock.close()
+    except KeyboardInterrupt:
+        sock.close()
+        raise KeyboardInterrupt()
     return
 
 # Funcion principal, ejecuta la logica de cliente para los argumentos ingresados
@@ -110,8 +114,6 @@ def main(argv):
         return None
     elif (len(args) == 4): # Seteo value como el string vacio, si no existe
         args.append('')
-    if (args[0] == 'localhost'):
-            args[0] = getLocalhost()
     try:
         mensaje = (args[2], args[3], args[4])
         client_datos(checkIp(args[0]), checkPort(args[1]), persist_conn, mensaje)
@@ -122,7 +124,4 @@ def main(argv):
 
 # Main Init #
 if __name__ == "__main__":
-    try:
-        main(sys.argv[1:])
-    except KeyboardInterrupt:
-        pass
+    main(sys.argv[1:])

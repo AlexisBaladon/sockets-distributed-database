@@ -77,7 +77,7 @@ def genMsgDatos(method: str, key: str, value: str) -> str:
         raise MethodError("Metodo \"%s\" no soportado" % method)
 
 #Devuelve el metodo o None en caso de tener un formato erróneo
-def parseCommand(command: str) -> tuple[str,str,str]:
+def parseCommand(command: str) -> tuple:
     regex_methods = {
         "GET": r'^GET (\d|\w+)\n$',
         "SET": r'^SET (\d|\w+) (\d|\w+)\n$',

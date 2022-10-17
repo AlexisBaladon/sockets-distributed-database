@@ -82,13 +82,7 @@ class ClientSocket:
     #   Protocolo DATOS
     # Mantiene persistente la conexion y retorna la respuesta por parte del servidor.
     def send_msg_datos(self, msg: str) -> str:
-        #client = ClientSocket() # Obtener el socket
-        #client.connect(addr, port) # Establecer conexion
         self.send(msg) # Enviar mensaje (DATOS)
         data = self.receive() # Recibir respuesta
         return data
-
-# Obtener localhost
-def getLocalhost():
-    return socket.gethostbyname(socket.gethostname())
 

@@ -30,9 +30,12 @@ def check_disconnected_peers(server: DtServer):
             current_time = datetime.now()
             time_diff = (current_time - peer.last_announce_time).total_seconds()
             if time_diff > 2*SLEEP_TIME:
-                server.peers.delete_peer(peer.ip, peer.datos_port)
-                peer.socket.close()
-                print("[DSCV] DISCONNECTED SOCKET", peer.ip, peer.datos_port)
+                try:
+                    server.peers.delete_peer(peer.ip, peer.datos_port)
+                    peer.socket.close()
+                    print(f'[DSCV] Se ha desconectado el peer {peer.ip}:{peer.datos_port}')
+                except Exception:
+                    print(f'[DSCV_ERR] No fue posible eleminar el peer {peer.ip}:{peer.datos_port}')
             peer.release()
     return
     
@@ -42,7 +45,7 @@ def DISCOVER(server: DtServer, conn: UDPSocket):
     disconnection_tracker.start()
 
     while True:
-        (msg, ip) = conn.receive() #TODO: FALTA UN TIMEOUT EN ESTE SOCKET
+        (msg, ip) = conn.receive()
         # Parsea el mensaje 'ANNOUNCE <port>', devolviendo la lista ['ANNOUNCE', <port>], o None, None.
         (method, port) = parse_command_ANNOUNCE(msg)
         try:
@@ -56,7 +59,7 @@ def DISCOVER(server: DtServer, conn: UDPSocket):
             server.peers.acquire()
             if server.peers.exists(ip, port, lock=False):
                 server.peers.release()
-                peer = server.peers.get_peer(ip, port) # Este es el peer solito
+                peer = server.peers.get_peer(ip, port)
                 peer.update_time()
             else:
                 # Si ya el primer elemento en esta lista de parseo es "None", es 
@@ -66,12 +69,12 @@ def DISCOVER(server: DtServer, conn: UDPSocket):
                     try:
                         socket_datos = ClientSocket()
                         socket_datos.connect(ip, int(port))
-                    except Exception as e:
+                    except Exception:
                         # Si ocurre una excepcion en la conexion se libera
                         # el lock, se cierra el socket y se continua la siguiente iteracion
                         server.peers.release()
                         socket_datos.close()
-                        print(f"[DSCV_ERR] {str(e)}")
+                        print("[DSCV_ERR] Ha ocurrido un error al conectarse a un peer")
                         continue
                     # Actualizar lista de server.
                     crc_server_nuevo = zlib.crc32(f'{ip}:{port}'.encode())
@@ -129,6 +132,10 @@ def deliver_values(server: DtServer, keys_to_deliver: set, new_server_peer: Peer
             if (resp != "OK\n"):
                 # Ocurrio un error, no se envia el dato y se la deja en el server
                 keys_with_errors.add(key)
+            else:
+                # El envio fue satisfactorio y se procede a borrar el dato de
+                # la base de datos actual
+                server.database.delete(key)
         except (TimeoutError, RuntimeError):
             # Se rompio la conexion con el servidor nuevo, parar!
             raise RuntimeError("La conexion de ", server.ip, " con el peer con firma ", str(hex(new_server_peer.crc)), " se rompio")
@@ -142,7 +149,7 @@ def deliver_values(server: DtServer, keys_to_deliver: set, new_server_peer: Peer
 def format_command_ANNOUNCE(port: str) -> str:
     return f"ANNOUNCE {port}\n"
 
-def parse_command_ANNOUNCE(command: str) -> tuple[str, str]:
+def parse_command_ANNOUNCE(command: str) -> tuple:
     regex_method = {
         "ANNOUNCE": r'^ANNOUNCE (\d|\w+)\n$',
     }

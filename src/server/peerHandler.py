@@ -89,6 +89,13 @@ class PeerHandler:
 
     # Funciones auxiliares #
 
+    # Cierra los sockets de los peers
+    def shutdown_peer_sockets(self):
+        with self.lock:
+            for peer in self.peers.values():
+                peer.socket.close()
+        return
+
     def addr_is_peer(self, ip, port, lock = True) -> bool:
         res = False
         if lock:
