@@ -45,7 +45,7 @@ def DISCOVER(server: DtServer, conn: UDPSocket):
     disconnection_tracker.start()
 
     while True:
-        (msg, ip) = conn.receive() #TODO: FALTA UN TIMEOUT EN ESTE SOCKET
+        (msg, ip) = conn.receive()
         # Parsea el mensaje 'ANNOUNCE <port>', devolviendo la lista ['ANNOUNCE', <port>], o None, None.
         (method, port) = parse_command_ANNOUNCE(msg)
         try:
