@@ -88,7 +88,3 @@ class ClientSocket:
         data = self.receive() # Recibir respuesta
         return data
 
-# Obtener localhost
-def getLocalhost():
-    return socket.gethostbyname(socket.gethostname())
-

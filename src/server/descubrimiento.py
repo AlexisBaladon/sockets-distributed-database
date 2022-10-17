@@ -30,9 +30,12 @@ def check_disconnected_peers(server: DtServer):
             current_time = datetime.now()
             time_diff = (current_time - peer.last_announce_time).total_seconds()
             if time_diff > 2*SLEEP_TIME:
-                server.peers.delete_peer(peer.ip, peer.datos_port)
-                peer.socket.close()
-                print("[DSCV] DISCONNECTED SOCKET", peer.ip, peer.datos_port)
+                try:
+                    server.peers.delete_peer(peer.ip, peer.datos_port)
+                    peer.socket.close()
+                    print(f'[DSCV] Se ha desconectado el peer {peer.ip}:{peer.datos_port}')
+                except Exception:
+                    print(f'[DSCV_ERR] No fue posible eleminar el peer {peer.ip}:{peer.datos_port}')
             peer.release()
     return
     
@@ -129,6 +132,10 @@ def deliver_values(server: DtServer, keys_to_deliver: set, new_server_peer: Peer
             if (resp != "OK\n"):
                 # Ocurrio un error, no se envia el dato y se la deja en el server
                 keys_with_errors.add(key)
+            else:
+                # El envio fue satisfactorio y se procede a borrar el dato de
+                # la base de datos actual
+                server.database.delete(key)
         except (TimeoutError, RuntimeError):
             # Se rompio la conexion con el servidor nuevo, parar!
             raise RuntimeError("La conexion de ", server.ip, " con el peer con firma ", str(hex(new_server_peer.crc)), " se rompio")
@@ -142,7 +149,7 @@ def deliver_values(server: DtServer, keys_to_deliver: set, new_server_peer: Peer
 def format_command_ANNOUNCE(port: str) -> str:
     return f"ANNOUNCE {port}\n"
 
-def parse_command_ANNOUNCE(command: str) -> tuple[str, str]:
+def parse_command_ANNOUNCE(command: str) -> tuple:
     regex_method = {
         "ANNOUNCE": r'^ANNOUNCE (\d|\w+)\n$',
     }

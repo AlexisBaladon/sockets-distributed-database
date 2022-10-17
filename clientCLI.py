@@ -11,7 +11,7 @@
 # Definicion de Imports #
 import os # Utilizado para limpiar la consola
 import client
-from src.client.clientSocket import ClientSocket, getLocalhost
+from src.client.clientSocket import ClientSocket
 from src.util.utilis import checkIp, checkPort 
 
 # Definicion de Constantes #
@@ -76,18 +76,14 @@ def help():
 def inputAddr():
     cliClear()
     print('Obteniendo direccion a conectar')
-    addr = getLocalhost()
+    addr = ''
     while True:
         addr = input("Ingrese direccion del servidor: ")
-        if (addr == '' or addr == 'localhost'):
-            addr = getLocalhost()
+        try:
+            addr = checkIp(addr)
             break
-        else:
-            try:
-                addr = checkIp(addr)
-                break
-            except Exception as e:
-                print('[ATENCION] ', str(e), '\n')
+        except Exception as e:
+            print('[ATENCION] ', str(e), '\n')
     port = 2022
     while True:
         try:

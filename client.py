@@ -10,7 +10,7 @@
 
 # Definicion de Imports #
 import sys, getopt
-from src.client.clientSocket import ClientSocket, getLocalhost
+from src.client.clientSocket import ClientSocket
 from src.exceptions.keyError import KeyError
 from src.exceptions.methodError import MethodError
 from src.util.utilis import checkIp, checkPort, genMsgDatos, parseCommand
@@ -110,8 +110,6 @@ def main(argv):
         return None
     elif (len(args) == 4): # Seteo value como el string vacio, si no existe
         args.append('')
-    if (args[0] == 'localhost'):
-            args[0] = getLocalhost()
     try:
         mensaje = (args[2], args[3], args[4])
         client_datos(checkIp(args[0]), checkPort(args[1]), persist_conn, mensaje)

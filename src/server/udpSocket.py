@@ -12,7 +12,7 @@ import socket
 # Definicion de Constantes #
 SIZE = 1024
 FORMAT = 'utf-8'
-HOST = socket.gethostbyname(socket.gethostname())
+HOST = ''
 BROADCAST = '<broadcast>'
 
 # Definicion clase UDPSocket #
@@ -36,7 +36,7 @@ class UDPSocket:
 
     # Recibimiento del mensaje "ANNOUNCE <puerto>".
     # Se asume que el string recibido en el parametro tiene ese formato.
-    def receive(self) -> tuple[str, str]:
+    def receive(self) -> tuple:
         msg, (ip, port) = self.sock.recvfrom(SIZE)
         data = msg.decode(FORMAT)
         return [data, ip]
