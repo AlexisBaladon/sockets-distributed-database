@@ -170,8 +170,8 @@ def main(args):
         # Si hay Cntr + C matar todos los threads
         print("[SERVER] Deteniendo servidor")
         # Cerrar todos los sockets
-        announce_udp_socket.close()
-        discover_udp_socket.close()
+        announce_udp_socket.sock.close()
+        discover_udp_socket.sock.close()
         datos_tcp_socket.close()
         server.peers.shutdown_peer_sockets()
     return
