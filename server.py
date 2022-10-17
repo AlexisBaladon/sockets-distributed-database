@@ -23,7 +23,7 @@ DEFAULT_DATOS_PORT = 2022
 DEFAULT_ANNOUNCE_PORT = 2023
 DEFAULT_DISCOVER_PORT = 2024
 
-HELP = [("client.py [options] | <ServerIP> <ServerDatosPort> "
+HELP = [("server.py [options] | <ServerIP> <ServerDatosPort> "
     "[<ServerAnnouncePort>] [<ServerDiscoverPort>]\n"),
     (" ServerIP:           Dirección IP del servidor\n"
     "  ServerDatosPort:    Puerto del servidor de DATOS\n"
