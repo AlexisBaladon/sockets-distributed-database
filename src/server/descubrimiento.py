@@ -69,12 +69,12 @@ def DISCOVER(server: DtServer, conn: UDPSocket):
                     try:
                         socket_datos = ClientSocket()
                         socket_datos.connect(ip, int(port))
-                    except Exception as e:
+                    except Exception:
                         # Si ocurre una excepcion en la conexion se libera
                         # el lock, se cierra el socket y se continua la siguiente iteracion
                         server.peers.release()
                         socket_datos.close()
-                        print(f"[DSCV_ERR] {str(e)}")
+                        print("[DSCV_ERR] Ha ocurrido un error al conectarse a un peer")
                         continue
                     # Actualizar lista de server.
                     crc_server_nuevo = zlib.crc32(f'{ip}:{port}'.encode())

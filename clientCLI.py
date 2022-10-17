@@ -153,6 +153,7 @@ def main():
                 cliClear()
         except KeyboardInterrupt:
             print('Finalizando...')
+            sock.close()
             break
         except ConnectionRefusedError:
             cliClear()

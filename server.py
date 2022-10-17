@@ -143,34 +143,39 @@ def main(args):
         print(HELP[0])
         return None
 
-    # Inicializacion del server #
-    server = DtServer(ip, datos_port, announce_port, discover_port) 
-    announce_udp_socket = UDPSocket(server.announce_port) # Crear announce socket
-    discover_udp_socket = UDPSocket(server.descubrimiento_port) # Crear discover socket
-    datos_tcp_socket = ClientSocket() # Crear client socket
-    thread_announce = threading.Thread(target=handle_announce, args=(server, announce_udp_socket), daemon=True)
-    thread_discover = threading.Thread(target=handle_discover, args=(server, discover_udp_socket), daemon=True)
-    thread_datos = threading.Thread(target=handle_datos, args=(server, datos_tcp_socket), daemon=True)
-    thread_announce.start()
-    thread_discover.start()
-    thread_datos.start()
-    print(f"[SERVER] Servidor atendiendo DATOS en {ip}:{datos_port}")
-    print(f"[SERVER] Servidor atendiendo ANNOUNCE en {ip}:{announce_port}")
-    print(f"[SERVER] Servidor atendiendo DISCOVER en {ip}:{discover_port}")
-    while True:
-        command = input()
-        try:
-            handle_commands(server, COMMANDS.index(command))
-        except ValueError:
-            if (command == "exit"):
-                raise KeyboardInterrupt("Exit")
-            print("[CMND] El comando no es correcto, ingrese 'help' para obtener ayuda")
+    try:
+        # Inicializacion del server #
+        server = DtServer(ip, datos_port, announce_port, discover_port) 
+        announce_udp_socket = UDPSocket(server.announce_port) # Crear announce socket
+        discover_udp_socket = UDPSocket(server.descubrimiento_port) # Crear discover socket
+        datos_tcp_socket = ClientSocket() # Crear client socket
+        thread_announce = threading.Thread(target=handle_announce, args=(server, announce_udp_socket), daemon=True)
+        thread_discover = threading.Thread(target=handle_discover, args=(server, discover_udp_socket), daemon=True)
+        thread_datos = threading.Thread(target=handle_datos, args=(server, datos_tcp_socket), daemon=True)
+        thread_announce.start()
+        thread_discover.start()
+        thread_datos.start()
+        print(f"[SERVER] Servidor atendiendo DATOS en {ip}:{datos_port}")
+        print(f"[SERVER] Servidor atendiendo ANNOUNCE en {ip}:{announce_port}")
+        print(f"[SERVER] Servidor atendiendo DISCOVER en {ip}:{discover_port}")
+        while True:
+            command = input()
+            try:
+                handle_commands(server, COMMANDS.index(command))
+            except ValueError:
+                if (command == "exit"):
+                    raise KeyboardInterrupt("Exit")
+                print("[CMND] El comando no es correcto, ingrese 'help' para obtener ayuda")
+    except KeyboardInterrupt:
+        # Si hay Cntr + C matar todos los threads
+        print("[SERVER] Deteniendo servidor")
+        # Cerrar todos los sockets
+        announce_udp_socket.close()
+        discover_udp_socket.close()
+        datos_tcp_socket.close()
+        server.peers.shutdown_peer_sockets()
     return
 
 # Main Init #
 if __name__ == "__main__":
-    try:
-        main(sys.argv[1:])
-    except KeyboardInterrupt:
-        # Si hay Cntr + C matar todos los threads
-        print("[SERVER] Deteniendo servidor")
+    main(sys.argv[1:])
